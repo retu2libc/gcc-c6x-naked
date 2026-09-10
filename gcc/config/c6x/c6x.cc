@@ -2729,6 +2729,67 @@ emit_add_sp_const (HOST_WIDE_INT offset, bool frame_related_p)
     }
 }
 
+/* Nonzero if FUNC (a FUNCTION_DECL, or the current function when NULL_TREE)
+   has the "naked" attribute.  A naked function has no compiler-generated
+   prologue or epilogue; the programmer supplies the entire function body,
+   including any register saves/restores and the return, in assembly.  */
+
+static bool
+c6x_naked_function_p (tree func)
+{
+  if (func == NULL_TREE)
+    func = current_function_decl;
+
+  return (func != NULL_TREE
+	  && lookup_attribute ("naked", DECL_ATTRIBUTES (func)) != NULL_TREE);
+}
+
+/* Handle a "naked" attribute; arguments as in
+   struct attribute_spec.handler.  */
+
+static tree
+c6x_handle_naked_attribute (tree *node, tree name,
+			    tree args ATTRIBUTE_UNUSED,
+			    int flags ATTRIBUTE_UNUSED,
+			    bool *no_add_attrs)
+{
+  if (TREE_CODE (*node) != FUNCTION_DECL)
+    {
+      warning (OPT_Wattributes, "%qE attribute only applies to functions",
+	       name);
+      *no_add_attrs = true;
+    }
+
+  return NULL_TREE;
+}
+
+/* Table of machine attributes.  */
+TARGET_GNU_ATTRIBUTES (c6x_attribute_table,
+{
+  /* { name, min_len, max_len, decl_req, type_req, fn_type_req,
+       affects_type_identity, handler, exclude } */
+  { "naked", 0, 0, true, false, false, false,
+    c6x_handle_naked_attribute, NULL }
+});
+
+/* Implement TARGET_WARN_FUNC_RETURN.  Naked functions supply their own
+   return sequence, so suppress warnings about a missing return.  */
+
+static bool
+c6x_warn_func_return (tree decl)
+{
+  return !c6x_naked_function_p (decl);
+}
+
+/* Implement TARGET_ALLOCATE_STACK_SLOTS_FOR_ARGS.  Naked functions have no
+   compiler-generated frame, so don't allocate stack slots for arguments.  */
+
+static bool
+c6x_allocate_stack_slots_for_args (void)
+{
+  return !c6x_naked_function_p (NULL_TREE);
+}
+
 /* Prologue and epilogue.  */
 void
 c6x_expand_prologue (void)
@@ -2738,6 +2799,15 @@ c6x_expand_prologue (void)
   rtx mem;
   int nsaved = 0;
   HOST_WIDE_INT initial_offset, off, added_already;
+
+  if (c6x_naked_function_p (NULL_TREE))
+    {
+      /* Naked functions get no prologue at all.  Emit a harmless clobber
+	 so the "prologue" expander still produces some RTL, as
+	 thread_prologue_and_epilogue_insns examines its output.  */
+      emit_insn (gen_rtx_CLOBBER (VOIDmode, const0_rtx));
+      return;
+    }
 
   c6x_compute_frame_layout (&frame);
 
@@ -2858,6 +2928,15 @@ c6x_expand_epilogue (bool sibcall)
   rtx mem;
   HOST_WIDE_INT off;
   int nsaved = 0;
+
+  if (c6x_naked_function_p (NULL_TREE))
+    {
+      /* Naked functions get no epilogue and no return sequence; the
+	 programmer's assembly is responsible for returning.  Emit a
+	 harmless clobber so the expander still produces some RTL.  */
+      emit_insn (gen_rtx_CLOBBER (VOIDmode, const0_rtx));
+      return;
+    }
 
   c6x_compute_frame_layout (&frame);
 
@@ -6871,6 +6950,13 @@ c6x_regno_reg_class (int reg)
 #define TARGET_HARD_REGNO_MODE_OK c6x_hard_regno_mode_ok
 #undef TARGET_MODES_TIEABLE_P
 #define TARGET_MODES_TIEABLE_P c6x_modes_tieable_p
+
+#undef TARGET_ATTRIBUTE_TABLE
+#define TARGET_ATTRIBUTE_TABLE c6x_attribute_table
+#undef TARGET_WARN_FUNC_RETURN
+#define TARGET_WARN_FUNC_RETURN c6x_warn_func_return
+#undef TARGET_ALLOCATE_STACK_SLOTS_FOR_ARGS
+#define TARGET_ALLOCATE_STACK_SLOTS_FOR_ARGS c6x_allocate_stack_slots_for_args
 
 struct gcc_target targetm = TARGET_INITIALIZER;
 
