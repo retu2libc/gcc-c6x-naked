@@ -3115,7 +3115,10 @@ special_name:   dev_mnemonic {
                     error_msg(@lit, "'%s' has embedded NUL", $lit.data);
                     YYERROR;
                   }
-                symbol_currency_add( $picture_sym, $lit.data );
+                  if( ! symbol_currency_add($picture_sym, $lit.data) ) {
+                    auto ch = $picture_sym[0];
+                    error_msg(@picture_sym, "invalid currency symbol: %qc", ch);
+                  }
                 }
         |       DECIMAL_POINT is COMMA
                 {
@@ -3530,8 +3533,12 @@ data_div:       %empty   { parser_division( data_div_e, NULL, 0, NULL ); }
                 }
                 ;
 
-data_sections:  data_section
-        |       data_sections data_section
+data_sections:  data_section {
+                  update_prior_invalid_field();
+                }
+        |       data_sections data_section {
+                  update_prior_invalid_field();
+                }
                 ;
 
 data_section:   FILE_SECT '.'
@@ -6186,7 +6193,7 @@ end_add:        %empty %prec ADD
 
 add_body:       sum TO rnames
                 {
-                  $$ = new arith_t(@sum, no_giving_e, $sum);
+                  $$ = new arith_t(@sum, no_giving_e, *$sum);
                   std::copy( rhs.begin(),
                              rhs.end(), back_inserter($$->tgts) );
                   $$->locs.tgts = @rnames;
@@ -6194,7 +6201,7 @@ add_body:       sum TO rnames
                 }
         |       sum TO num_operand[value] GIVING rnames
                 {
-                  $$ = new arith_t(@$, giving_e, $sum);
+                  $$ = new arith_t(@$, giving_e, *$sum);
                   $$->A.push_back(*$value);
                   std::copy( rhs.begin(),
                              rhs.end(), back_inserter($$->tgts) );
@@ -6203,7 +6210,7 @@ add_body:       sum TO rnames
                 }
         |       sum GIVING rnames
                 { // implicit TO
-                  $$ = new arith_t(@sum, giving_e, $sum);
+                  $$ = new arith_t(@sum, giving_e, *$sum);
                   std::copy( rhs.begin(),
                              rhs.end(), back_inserter($$->tgts) );
                   $$->locs.tgts = @rnames;
@@ -6222,13 +6229,23 @@ add_body:       sum TO rnames
                     }
                   // First src/tgt elements are templates.
                   // Their subscripts apply to the correspondents.
-                  $$ = new arith_t(@sum, corresponding_e, $sum);
+                  $$ = new arith_t(@sum, corresponding_e, *$sum);
                   $$->tgts.push_front(rhs.front());
                   $$->locs.tgts = @rnames;
                   // use arith_t functor to populate A and tgts
                   *$$ = std::for_each( pairs.begin(), pairs.end(), *$$ );
                   $$->A.pop_front();
                   $$->tgts.pop_front();
+                  if( 1 < $sum->size() ) {
+                    unsigned long n = $sum->size();
+                    error_msg(@sum, "ADD CORRESPONDING accepts only 1 sending operand, "
+                              "%lu provided", n);
+                  }
+                  if( 1 < rhs.size() ) {
+                    unsigned long n = rhs.size();
+                    error_msg(@rnames, "ADD CORRESPONDING accepts only 1 TO operand, "
+                              "%lu provided", n);
+                  }
                   rhs.clear();
                 }
                 ;
@@ -8868,7 +8885,7 @@ end_subtract:   %empty %prec SUBTRACT
 
 subtract_body:  sum FROM rnames
                 {
-                  $$ = new arith_t(@sum, no_giving_e, $sum);
+                  $$ = new arith_t(@sum, no_giving_e, *$sum);
                   std::copy( rhs.begin(),
                              rhs.end(), back_inserter($$->tgts) );
                   $$->locs.tgts = @rnames;
@@ -8876,7 +8893,7 @@ subtract_body:  sum FROM rnames
                 }
         |       sum FROM num_operand[input] GIVING rnames
                 {
-                  $$ = new arith_t(@sum, giving_e, $sum);
+                  $$ = new arith_t(@sum, giving_e, *$sum);
                   $$->B.push_back(*$input);
                   $$->locs.B = @input;
                   std::copy( rhs.begin(),
@@ -8897,7 +8914,7 @@ subtract_body:  sum FROM rnames
                     }
                   // First src/tgt elements are templates.
                   // Their subscripts apply to the correspondents.
-                  $$ = new arith_t(@sum, corresponding_e, $sum);
+                  $$ = new arith_t(@sum, corresponding_e, *$sum);
                   $$->tgts.push_front(rhs.front());
                   $$->locs.tgts = @rnames;
                   // use arith_t functor to populate A and tgts
@@ -10785,6 +10802,7 @@ end_call:       %empty %prec CALL
 
 call_body:      ffi_name
                 { statement_begin(@1, CALL);
+                  $$.loc = @1;
                   $$.ffi_name = $ffi_name;
                   $$.using_params = NULL;
                   $$.ffi_returning = cbl_refer_t::empty();
@@ -10792,6 +10810,7 @@ call_body:      ffi_name
 
         |       ffi_name USING parameters
                 { statement_begin(@1, CALL);
+                  $$.loc = @1;
                   $$.ffi_name = $ffi_name;
                   $$.using_params = $parameters;
                   $$.ffi_returning = cbl_refer_t::empty();
@@ -10799,12 +10818,14 @@ call_body:      ffi_name
                 }
         |       ffi_name call_returning scalar[ret]
                 { statement_begin(@1, CALL);
+                  $$.loc = @1;
                   $$.ffi_name = $ffi_name;
                   $$.using_params = NULL;
                   $$.ffi_returning = $ret;
                 }
         |       ffi_name USING parameters call_returning scalar[ret]
                 { statement_begin(@1, CALL);
+                  $$.loc = @1;
                   $$.ffi_name = $ffi_name;
                   $$.using_params = $parameters;
                   $$.ffi_returning = $ret;
@@ -10890,8 +10911,10 @@ ffi_by_ref:     scalar_arg[refer]
         |       num_literal
                 {
                   cbl_message(@1, MfCallLiteral,
-                              "cannot pass %qs BY REFERENCE", $1->data.initial);
+                              "cannot pass %qs BY REFERENCE",
+                              $1->data.original());
                   cbl_refer_t *r = new_reference($1);
+                  r->loc = @1;
                   $$ = new cbl_ffi_arg_t(by_content_e, r);
                 }
         |       ADDRESS OF scalar_arg[refer]
@@ -10930,6 +10953,7 @@ ffi_by_val:     by_value_arg
                 {
                   const char *s = $1.s? $1.s : string_of($1.r);
                   auto r = new_reference(new_literal(@1, s));
+                  r->loc = @1;
                   $$ = new cbl_ffi_arg_t(by_value_e, r);
                 }
         |       ADDRESS OF scalar
@@ -12962,26 +12986,22 @@ cbl_ffi_arg_t::matches( const cbl_ffi_arg_t& that ) const {
   case by_reference_e:
     if( crv == by_reference_e ) {
       if( (formal->attr & mask) == (actual->attr & mask) ) {
-        if( capacity_ok(formal, actual) ) {
+        if( formal->data.capacity() == actual->data.capacity() ) {
           if( formal->type == actual->type ) { // captures USAGE except COMP-X
             return true;
           }
         }
-        else if (actual->attr & any_length_e)
+        else if (actual->attr & any_length_e || formal->attr & any_length_e)
           return true;
       }
     }
-    // If actual is by reference, so must the formal be.
-    dbgmsg("%s:%d: failed, reference feature mismatch", __func__, __LINE__);
+    // If actual is by reference, so must the formal be. 
     return false;
     break;
   case by_content_e:
     break;
   case by_value_e:
-    if( crv != by_value_e ) {
-      dbgmsg("%s:%d: failed, actual %s not by value", __func__, __LINE__, actual->name);
-      return false;
-    }
+    if( crv != by_value_e ) return false;
     if( formal->type == FldPointer && that.refer.is_pointer() ) return true;
     break;
   }
@@ -12998,7 +13018,6 @@ cbl_ffi_arg_t::matches( const cbl_ffi_arg_t& that ) const {
     return actual->data.capacity() == formal->data.capacity()
         && actual->codeset.encoding == formal->codeset.encoding;
   }          
-  dbgmsg("%s:%d: failed, for some reason", __func__, __LINE__);
   return false;
 }
 
@@ -13067,14 +13086,16 @@ verify_args( const YYLTYPE& loc,
      */
     if( ord < narg ) {
       if( ord < formals.size() ) {
-        error_msg( loc, "parameter %zu %qs (%s, capacity %u, %s) "
-                   "invalid for %qs parameter %qs (%s, capacity %u, %s)",
+        error_msg( parg->refer.loc, "parameter %zu BY %s %qs (%s, capacity %u, %s) "
+                   "invalid for %qs parameter BY %s %qs (%s, capacity %u, %s)",
                    1 + ord,
+                   cbl_ffi_crv_str(parg->crv),
                    nice_name_of(parg->field()),
                     cbl_field_type_name(parg->field()->type),
                     parg->field()->data.capacity(),
                     parg->field()->attr & signable_e ? "signed" : "unsigned",
                    name, 
+                   cbl_ffi_crv_str(formals[ord].crv),
                    nice_name_of(formals[ord].refer.field),
                    cbl_field_type_name(formals[ord].refer.field->type),
                    formals[ord].refer.field->data.capacity(),
@@ -13845,13 +13866,13 @@ valid_pointer_relop( const cbl_loc_t& lloc,
 }
 
 arith_t::arith_t( const cbl_loc_t& loc,
-                  cbl_arith_format_t format, refer_list_t * refers )
-  : format(format), on_error(NULL), not_error(NULL)
+                  cbl_arith_format_t format, const refer_list_t& refers )
+  : format(format)
+  , A(refers.refers.begin(), refers.refers.end())
+  , on_error(NULL)
+  , not_error(NULL)
 {
-  std::copy( refers->refers.begin(), refers->refers.end(), back_inserter(A) );
-  refers->refers.clear();
   locs.A = loc;
-  delete refers;
 }
 
 cbl_key_t::cbl_key_t( sort_key_t that )
@@ -15062,6 +15083,39 @@ cbl_field_t::value_str() const {
     return data.etc_type_str();
 }
 
+/*
+ * Default keyword adjustments for -dialect {mf,gnu}
+ */
+static void
+dialect_words_set( cbl_dialect_t dialect ) {
+  const static auto dialect_mf_gnu = cbl_dialect_t(dialect_mf_e | dialect_gnu_e);
+  static unsigned int done;
+  
+  typedef bool (current_tokens_t::*wordop_func_t)(const cbl_loc_t& loc,
+                          const cbl_name_t keyword,
+                          const cbl_name_t alias);
+  struct wordop_t {
+    cbl_dialect_t dialect;
+    wordop_func_t op;
+    cbl_name_t keyword, alias;
+    
+    bool match(cbl_dialect_t dialect) const { return this->dialect & dialect; }
+  };
+  const static std::vector<wordop_t> wordops {
+    wordop_t{ dialect_mf_gnu, &current_tokens_t::equate, "BINARY-DOUBLE", "BINARY-C-LONG" },
+    wordop_t{ dialect_gnu_e,  &current_tokens_t::substitute, "CONCAT", "CONCATENATE" },
+  };
+
+  if( dialect != (done & dialect) ) { // if any part of dialect not done
+    for( const auto& w : wordops ) {
+      if( w.match(dialect) ) {
+        (cdf_tokens.*w.op)(cbl_loc_t(), w.keyword, w.alias);
+      }
+    }
+  }
+  done |= dialect;
+}
+  
 void
 cobol_dialect_set( cbl_dialect_t dialect ) {
   switch(dialect) {
@@ -15072,11 +15126,8 @@ cobol_dialect_set( cbl_dialect_t dialect ) {
     cobol_gcobol_feature_set(feature_embiggen_e);
     break;
   case dialect_mf_e:
-    break;
   case dialect_gnu_e:
-    if( 0 == (cbl_dialects & dialect) ) { // first time
-      cdf_tokens.equate(cbl_loc_t(), "BINARY-DOUBLE", "BINARY-C-LONG");
-    }
+    dialect_words_set(dialect);
     break;
   }    
   cbl_dialects |= dialect;

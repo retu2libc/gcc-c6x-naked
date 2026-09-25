@@ -2429,7 +2429,6 @@ handle_mode_attribute (tree *node, tree name, tree args,
     warning (OPT_Wattributes, "%qE attribute ignored", name);
   else
     {
-      int j;
       const char *p = IDENTIFIER_POINTER (ident);
       int len = strlen (p);
       machine_mode mode = VOIDmode;
@@ -2461,12 +2460,7 @@ handle_mode_attribute (tree *node, tree name, tree args,
       else if (!strcmp (p, "unwind_word"))
 	mode = targetm.unwind_word_mode ();
       else
-	for (j = 0; j < NUM_MACHINE_MODES; j++)
-	  if (!strcmp (p, GET_MODE_NAME (j)))
-	    {
-	      mode = (machine_mode) j;
-	      break;
-	    }
+	parse_machine_mode (p, &mode);
 
       if (mode == VOIDmode)
 	{
@@ -4715,10 +4709,6 @@ handle_callback_only_attribute (tree *node, tree name, tree args,
      DECL_ARGUMENTS returns NULL at this point.  */
   int callback_fn_idx = TREE_INT_CST_LOW (val);
   tree decl_type_args = TYPE_ARG_TYPES (decl_type);
-  tree it;
-  for (it = decl_type_args; it != NULL_TREE; it = TREE_CHAIN (it))
-    if (it == void_list_node)
-      break;
 
   if (callback_fn_idx == CB_UNKNOWN_POS)
     {
@@ -4760,13 +4750,7 @@ handle_callback_only_attribute (tree *node, tree name, tree args,
   /* Compare the length of the list of argument indices
      and the real number of parameters the callback takes.  */
   unsigned cfn_nargs = list_length (TREE_CHAIN (args));
-  unsigned type_nargs = list_length (type_args);
-  for (it = type_args; it != NULL_TREE; it = TREE_CHAIN (it))
-    if (it == void_list_node)
-      {
-	--type_nargs;
-	break;
-      }
+  unsigned type_nargs = list_length (type_args) - 1;
   if (cfn_nargs != type_nargs)
     {
       warning_at (DECL_SOURCE_LOCATION (decl), OPT_Wattributes,
@@ -4777,7 +4761,7 @@ handle_callback_only_attribute (tree *node, tree name, tree args,
     }
 
   unsigned curr = 0;
-  tree cfn_it;
+  tree it, cfn_it;
   /* Validate type compatibility of the arguments passed
      from caller function to callback.  "it" is used to step
      through the parameters of the caller, "cfn_it" is

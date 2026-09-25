@@ -1008,6 +1008,10 @@ wrapup_namespace_globals ()
     {
       for (tree decl : *statics)
 	{
+	  /* Rewrite the REFLECT_EXPR with 0 so that the ME can process it.  */
+	  if (flag_reflection && DECL_INITIAL (decl))
+	    rewrite_null_reflection (DECL_INITIAL (decl));
+
 	  if (warn_unused_function
 	      && TREE_CODE (decl) == FUNCTION_DECL
 	      && DECL_INITIAL (decl) == 0
@@ -5679,6 +5683,13 @@ cxx_init_decl_processing (void)
   set_call_expr_flags (decl, ECF_NOTHROW | ECF_LEAF);
   SET_DECL_IMMEDIATE_FUNCTION_P (decl);
 
+  tree void_vaftype = build_varargs_function_type_list (void_type_node,
+							NULL_TREE);
+  decl = add_builtin_function ("__builtin_start_lifetime",
+			       void_vaftype, CP_BUILT_IN_START_LIFETIME,
+			       BUILT_IN_FRONTEND, NULL, NULL_TREE);
+  set_call_expr_flags (decl, ECF_NOTHROW | ECF_LEAF);
+
   integer_two_node = build_int_cst (integer_type_node, 2);
 
   /* Guess at the initial static decls size.  */
@@ -10000,10 +10011,6 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
 	    }
 	}
 
-      /* Detect stuff like 'info r = ^^int;' outside a manifestly
-	 constant-evaluated context.  */
-      check_out_of_consteval_use (decl);
-
       /* If this is a local variable that will need a mangled name,
 	 register it now.  We must do this before processing the
 	 initializer for the variable, since the initialization might
@@ -10028,10 +10035,10 @@ cp_finish_decl (tree decl, tree init, bool init_const_expr_p,
 	      walk_tree (&init, notice_forced_label_r, NULL, NULL);
 	      add_local_decl (cfun, decl);
 	    }
-	  if (!consteval_only_p (decl))
-	    /* And make sure it's in the symbol table for
-	       c_parse_final_cleanups to find.  */
-	    varpool_node::get_create (decl);
+	  /* And make sure it's in the symbol table for
+	     c_parse_final_cleanups to find.  */
+	  gcc_checking_assert (!consteval_only_p (decl));
+	  varpool_node::get_create (decl);
 	}
 
       if (flag_openmp
@@ -12897,12 +12904,6 @@ grokfndecl (tree ctype,
 
   if (DECL_CONSTRUCTOR_P (decl) && !grok_ctor_properties (ctype, decl))
     return NULL_TREE;
-
-  /* Don't call check_consteval_only_fn for defaulted functions.  Those are
-     immediate-escalating functions but at this point DECL_DEFAULTED_P has
-     not been set.  */
-  if (initialized != SD_DEFAULTED)
-    check_consteval_only_fn (decl);
 
   if (ctype == NULL_TREE || check)
     return decl;

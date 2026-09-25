@@ -107,6 +107,30 @@ enum
 
 #include "a68-types.h"
 
+/* Location-tracking functions.  */
+
+/* Get the file name that LINE belongs to.  */
+
+inline const char *
+FILENAME (LINE_T *line)
+{
+  const line_map_ordinary * ord_map;
+  ord_map = (const line_map_ordinary *)(linemap_lookup (line_table,
+							LOCATION (line)));
+  return LINEMAP_FILE (ord_map);
+}
+
+/* Get the 1-based line number of LINE.  */
+
+inline unsigned int
+LINE_NO (LINE_T *line)
+{
+  location_t loc = LOCATION (line);
+  const line_map_ordinary * ord_map;
+  ord_map = (const line_map_ordinary *)(linemap_lookup (line_table, loc));
+  return SOURCE_LINE (ord_map, loc);
+}
+
 /* Front-end global state.  */
 
 extern GTY(()) A68_T a68_common;
@@ -316,6 +340,8 @@ char *a68_new_string (const char *t, ...);
 const char *a68_attribute_name (enum a68_attribute attr);
 location_t a68_get_node_location (NODE_T *p);
 location_t a68_get_line_location (LINE_T *line, const char *pos);
+bool a68_yields_value (NODE_T *p);
+bool a68_is_declaration (NODE_T *p);
 
 /* a68-parser-top-down.cc  */
 
@@ -414,8 +440,8 @@ PACK_T *a68_absorb_union_pack (PACK_T * u);
 void a68_add_mode_to_pack (PACK_T **p, MOID_T *m, const char *text, NODE_T *node);
 void a68_add_mode_to_pack_end (PACK_T **p, MOID_T *m, const char *text, NODE_T *node);
 void a68_make_moid_list (MODULE_T *mod);
-
 void a68_renumber_moids (MOID_T *p, int n);
+void a68_resolve_equivalent (MOID_T **m);
 
 /* a68-moids-to-string.cc  */
 
@@ -498,6 +524,10 @@ void a68_scope_checker (NODE_T *p);
 /* a68-parser-serial-dsa.cc  */
 
 void a68_serial_dsa (NODE_T *p);
+
+/* a68-parser-sprops.cc  */
+
+void a68_sprops (NODE_T *p);
 
 /* a68-parser-pragmat.cc */
 
@@ -718,10 +748,12 @@ void a68_push_serial_clause_range (MOID_T *clause_mode,
 				   bool save_restore_stack = false);
 tree a68_pop_serial_clause_range (void);
 void a68_add_stmt (tree exp);
+void a68_add_global_decl (tree decl);
 void a68_add_decl (tree decl);
 void a68_add_decl_expr (tree decl_expr);
 void a68_add_completer (void);
 tree a68_range_context (void);
+tree a68_global_context (void);
 tree a68_range_names (void);
 tree a68_range_stmt_list (void);
 
@@ -1072,7 +1104,8 @@ char *a68_find_archive_export_data (const char *filename, int fd, size_t *size);
 
 /* a68-parser-debug.cc  */
 
-void a68_dump_parse_tree (NODE_T *p, bool tables = false, bool levels = false);
+void a68_dump_parse_tree (NODE_T *p, bool tables = false, bool levels = false,
+			  bool sprops = false);
 void a68_dump_modes (MOID_T *m);
 void a68_dump_moif (MOIF_T *moif);
 

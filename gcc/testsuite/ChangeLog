@@ -1,3 +1,2520 @@
+2026-09-24  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR libfortran/127347
+	* gfortran.dg/coarray/stop_sync_1.f90: Check STAT=.
+	* gfortran.dg/coarray/collective_stopped_1.f90: New test.
+	* gfortran.dg/coarray/stop_end_team_1.f90: New test.
+	* gfortran.dg/coarray/stop_sync_team_1.f90: New test.
+	* gfortran.dg/coarray/sync_memory_stopped_1.f90: New test.
+
+2026-09-24  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR libfortran/127347
+	* gfortran.dg/coarray/fail_image_sync_1.f90: New test.
+	* gfortran.dg/coarray/stop_sync_1.f90: New test.
+	* gfortran.dg/coarray/sync_images_stopped_1.f90: New test.
+
+2026-09-24  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR libfortran/127347
+	* gfortran.dg/coarray/error_stop_1.f90: New test.
+
+2026-09-24  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* algol68/compile/mode-shadow-1.a68: New test.
+
+2026-09-24  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/126848
+	* c-c++-common/auto-init-1.c: Use [15] instead of 1 or [26] instead of
+	2 in regexps matching second .DEFERRED_INIT arguments.
+	* c-c++-common/auto-init-2.c: Likewise.
+	* c-c++-common/auto-init-3.c: Likewise.
+	* c-c++-common/auto-init-4.c: Likewise.
+	* c-c++-common/auto-init-5.c: Likewise.
+	* c-c++-common/auto-init-6.c: Likewise.
+	* c-c++-common/auto-init-7.c: Likewise.
+	* c-c++-common/auto-init-8.c: Likewise.
+	* c-c++-common/auto-init-9.c: Likewise.
+	* c-c++-common/auto-init-10.c: Likewise.
+	* c-c++-common/auto-init-11.c: Likewise.
+	* c-c++-common/auto-init-12.c: Likewise.
+	* c-c++-common/auto-init-13.c: Likewise.
+	* c-c++-common/auto-init-14.c: Likewise.
+	* c-c++-common/auto-init-15.c: Likewise.
+	* c-c++-common/auto-init-16.c: Likewise.
+	* c-c++-common/auto-init-esra.c: Likewise.
+	* c-c++-common/auto-init-padding-1.c: Likewise.
+	* g++.dg/cpp26/erroneous7.C: New test.
+	* g++.dg/cpp26/erroneous8.C: New test.
+	* g++.dg/cpp26/erroneous9.C: New test.
+
+2026-09-24  Tamar Christina  <tamar.christina@arm.com>
+
+	PR tree-optimization/127579
+	* gcc.target/aarch64/pr127579.c: New test.
+
+2026-09-24  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/i386/cet-switch-4.c: New test.
+
+2026-09-24  Richard Biener  <rguenther@suse.de>
+
+	PR target/127268
+	* gcc.target/i386/vect-bb-reduc-1.c: New testcase.
+
+2026-09-24  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f16-mf2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f16-mf4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwmul_vv-f32-mf2.c: New test.
+
+2026-09-24  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f16-mf2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f16-mf4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwsub_vv-f32-mf2.c: New test.
+
+2026-09-24  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f16-mf2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f16-mf4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_vv-f32-mf2.c: New test.
+
+2026-09-24  Robert Dubner  <rdubner@symas.com>
+
+	* cobol.dg/group2/Passing_ADDRESS_OF_parameter.cob: New test.
+	* cobol.dg/group2/Passing_ADDRESS_OF_parameter.out: New test.
+	* cobol.dg/group2/Repository_uber_alles.cob: New test.
+	* cobol.dg/group2/Repository_uber_alles.out: New test.
+
+2026-09-23  Robert Dubner  <rdubner@symas.com>
+
+	* cobol.dg/group2/CBL_READ_FILE__check_file_size_with_flags___128.cob:
+	Add dg-require-iconv directive.
+	* cobol.dg/group2/CDF_Feature_.cob: Likewise.
+	* cobol.dg/group2/CHAR_and_ORD_with_COLLATING_sequence_-_EBCDIC.cob:
+	Likewise.
+	* cobol.dg/group2/FIND-STRING__forward_.cob: Likewise.
+	* cobol.dg/group2/FIND-STRING__reverse_.cob: Likewise.
+	* cobol.dg/group2/RT3609_Unexpected_PROCESS.cob: Likewise.
+
+2026-09-23  Tobias Burnus  <tburnus@baylibre.com>
+
+	* gfortran.dg/gomp/directive-comma-clause.f90: New test.
+
+2026-09-23  Vijay Shankar  <vijay@linux.ibm.com>
+
+	PR target/27479
+	* gcc.target/powerpc/pr27479.c: New Test.
+
+2026-09-23  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/127506
+	* g++.dg/cpp26/within-lifetime13.C: New test.
+
+2026-09-23  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/125536
+	* g++.dg/template/unify14.C: New test.
+
+2026-09-23  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/126599
+	* g++.dg/diagnostic/ptrtomem5.C: New test.
+	* g++.dg/diagnostic/ptrtomem6.C: New test.
+	* g++.dg/reflect/display_string_of1.C: Add 2 new tests.
+	* g++.dg/reflect/u8display_string_of1.C: Likewise.
+
+2026-09-23  Matthias Kretz  <m.kretz@gsi.de>
+
+	* gcc.target/i386/avx-roundeven.c: New test.
+	* gcc.target/i386/avx512f-roundeven.c: New test.
+	* gcc.target/i386/avx512fp16-roundeven.c: New test.
+	* gcc.target/i386/sse4_1-roundeven.c: New test.
+
+2026-09-22  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* algol68/compile/prepostlude-crash-1.a68: New test.
+
+2026-09-22  Chung-Lin Tang  <cltang@baylibre.com>
+
+	* c-c++-common/gomp/declare-target-1.c: Add local clause test.
+	* c-c++-common/gomp/declare-target-8.c: New testcase.
+	* gfortran.dg/gomp/declare-target-1.f90: Add local clause test.
+	* gfortran.dg/gomp/declare-target-7.f90: New testcase.
+	* gfortran.dg/gomp/groupprivate-2.f90: Adjust test.
+
+2026-09-22  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* cobol.dg/group2/CBL_GET_PROGRAM_INFO__get_program_name_-_functions_0_and_2_.cob:
+		Update test to new behaviour.
+	* cobol.dg/group2/CBL_GET_PROGRAM_INFO__get_program_name_-_functions_0_and_2_.out: Likewise.
+
+2026-09-22  Eric Botcazou  <ebotcazou@adacore.com>
+
+	* gnat.dg/access12.adb: Adjust error message.
+	* gnat.dg/aliased3.adb: Likewise.
+
+2026-09-22  Vladimir N. Makarov  <vmakarov@redhat.com>
+
+	PR rtl-optimization/127326
+	* gcc.target/i386/pr127326.c: New.
+
+2026-09-22  Joshua Berne  <berne@notadragon.com>
+
+	PR c++/125459
+	* g++.dg/contracts/cpp26/pr125459.C: New test.
+
+2026-09-22  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	PR modula2/127554
+	* gm2.dg/spell/iso/fail/constaggregate.mod: New test.
+
+2026-09-22  Roger Sayle  <roger@nextmovesoftware.com>
+	    Hongtao Liu  <hongtao.liu@intel.com>
+
+	* gcc.target/i386/pr126293-15.c: Update test case.
+	* gcc.target/i386/pr126293-5.c: Likewise.
+
+2026-09-22  Jakub Jelinek  <jakub@redhat.com>
+
+	PR middle-end/127492
+	* gcc.dg/pr127492.c: New test.
+
+2026-09-22  Wilco Dijkstra  <wilco.dijkstra@arm.com>
+
+	* gcc.target/aarch64/atomic-store2.c: New test.
+
+2026-09-22  liuhongt  <hongtao.liu@intel.com>
+
+	PR tree-optimization/126486
+	* gcc.dg/tree-ssa/pr126486.c: New test.
+	* gcc.dg/tree-ssa/pr19210-1.c: Remove obsolete missed diagnostic.
+	* gcc.target/i386/kortest_ccz-1.c: Restrict no-kmov scan to non-ia32.
+	Assisted-by: openai.gpt-5.6-sol xhigh <noreply@openai.com>
+
+2026-09-22  liuhongt  <hongtao.liu@intel.com>
+
+	PR target/127500
+	* gcc.target/i386/pr127500.c: New test.
+
+2026-09-22  Naveen  <naveen.siddegowda@oss.qualcomm.com>
+
+	PR tree-optimization/112626
+	PR tree-optimization/112626
+	* gcc.dg/tree-ssa/pr112626.c: New test.
+	* gcc.dg/tree-ssa/pr112626-wrap.c: New test.
+
+2026-09-22  Pan Li  <pan2.li@intel.com>
+
+	PR target/127269
+	* gcc.target/riscv/rvv/base/pr127269-18.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-19.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-20.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-21.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-22.c: New test.
+
+2026-09-22  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/base/pr112431-42.c: Remove the xfail
+	of the vmv1r check.
+
+2026-09-22  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f16-mf2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f16-mf4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vfwadd_wv-f32-mf2.c: New test.
+
+2026-09-22  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	* c-c++-common/gomp/has-include-1.c: Add second dg-error.
+
+2026-09-21  Eric Botcazou  <ebotcazou@adacore.com>
+
+	* gnat.dg/array44.adb: New test.
+
+2026-09-21  Ancheng.Qiao  <ancheng.qiao@corelabtech.com>
+
+	* gcc.target/riscv/zcmp_fpr_save_below_sp.c: New test.  Compile an
+	FP-register-heavy function at -Os with Zcmp and check that no
+	callee-saved FPR is saved at a negative offset of SP.
+
+2026-09-21  Robert Dubner  <rdubner@symas.com>
+
+	* cobol.dg/group2/CBL_GET_PROGRAM_INFO__get_program_name_-_functions_0_and_2_.cob: New test.
+	* cobol.dg/group2/CBL_GET_PROGRAM_INFO__get_program_name_-_functions_0_and_2_.out: New test.
+
+2026-09-21  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* algol68/execute/modules/program-28.a68: New test.
+	* algol68/execute/modules/module28.a68: New file.
+
+2026-09-21  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/127448
+	* gfortran.dg/pointer_assign_17.f90: New test.
+
+2026-09-21  Matt Turner  <mattst88@gmail.com>
+
+	PR middle-end/66462
+	* gcc.target/aarch64/pr66462-2.c: New test.
+	* gcc.target/alpha/fp-classify-5.c: New test.
+	* gcc.target/alpha/fp-classify-6.c: New test.
+
+2026-09-21  Matt Turner  <mattst88@gmail.com>
+
+	PR middle-end/66462
+	* gcc.target/aarch64/pr66462.c: Add _Float16 and __bf16 tests for
+	isinf, isfinite and isnan.
+
+2026-09-21  Matt Turner  <mattst88@gmail.com>
+
+	PR middle-end/66462
+	* gcc.target/aarch64/pr66462.c: Add tests for isnormal, including
+	_Float16 and __bf16.
+
+2026-09-21  Matt Turner  <mattst88@gmail.com>
+
+	* gcc.target/aarch64/nosimd-extend.c: New test.
+
+2026-09-21  Matt Turner  <mattst88@gmail.com>
+
+	PR middle-end/66462
+	* gcc.target/alpha/fp-classify-1.c: New test.
+	* gcc.target/alpha/fp-classify-2.c: New test.
+	* gcc.target/alpha/fp-classify-3.c: New test.
+	* gcc.target/alpha/fp-classify-4.c: New test.
+
+2026-09-21  Richard Biener  <rguenther@suse.de>
+	    Claude Opus 5  <noreply@anthropic.com>
+
+	PR tree-optimization/113703
+	PR tree-optimization/127515
+	* gcc.dg/torture/pr113703-5.c: New test.
+	* gcc.dg/torture/pr113703-6.c: New test.
+
+2026-09-21  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127475
+	* gcc.dg/vect/vect-pr127475.c: New testcase.
+
+2026-09-21  Richard Biener  <rguenther@suse.de>
+
+	PR ipa/127479
+	* gcc.dg/lto/pr127479_0.c: New testcase.
+
+2026-09-21  Uros Bizjak  <ubizjak@gmail.com>
+
+	PR target/127461
+	* gcc.target/i386/pr127461.c: New test.
+
+2026-09-21  Artemiy Volkov  <artemiy.volkov@arm.com>
+
+	* gcc.dg/tree-ssa/match-bit-extract-shift.c: New test.
+
+2026-09-21  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/127493
+	* g++.dg/reflect/source_location_of1.C (struct G, struct H): New
+	types.  Add asserts for source_location_of of member function and
+	member function template.
+	* g++.dg/reflect/source_location_of2.C: Expect implicitEqLine rather
+	than 0 for line of ^^ImplicitEq::operator==.
+
+2026-09-21  Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/127498
+	* gcc.target/i386/gfni-pr127498.c: New test.
+	* gcc.target/i386/shift-gf2p8affine-5.c: Use -mavx2 in dg-options
+	instead of -mavx.  Expect 46 insns instead of 31.
+
+2026-09-21  Jakub Jelinek  <jakub@redhat.com>
+
+	* c-c++-common/builtin-bswapg-1.c: Test
+	__has_builtin(__builtin_bswapg).
+	* c-c++-common/builtin-bitreverseg-1.c: Test
+	__has_builtin(__builtin_bitreverseg).
+
+2026-09-21  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR rtl-optimization/127445
+	* gcc.target/aarch64/pr127445.c: New test.
+
+2026-09-21  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/vect/vect-sat-trunc-range-precision-1.c: Do not force
+	execution.
+	* gcc.dg/vect/vect-sat-trunc-shift-sign-source-1.c: Likewise.
+
+2026-09-21  Naveen  <naveen.siddegowda@oss.qualcomm.com>
+
+	PR tree-optimization/98984
+	* gcc.dg/tree-ssa/pr98984.c: New test.
+	* gcc.dg/tree-ssa/pr98984-2.c: New test.
+
+2026-09-20  Matt Turner  <mattst88@gmail.com>
+
+	* gcc.target/alpha/movmisalign-si.c: New test.
+	* gcc.target/alpha/movmisalign-si-bwx.c: New test.
+	* gcc.target/alpha/movmisalign-hi-bwx.c: New test.
+	* gcc.target/alpha/movmisalign-run.c: New test.
+
+2026-09-20  Samarth Tandale  <samarth.tandale@oss.qualcomm.com>
+
+	PR tree-optimization/125700
+	* gcc.dg/tree-ssa/pr125700.c: New test.
+	* gcc.dg/tree-ssa/pr125700-int-width.c: New test.
+	* gcc.dg/tree-ssa/pr125700-negative.c: New test.
+	* gcc.dg/tree-ssa/pr125700-range.c: New test.
+
+2026-09-20  Joshua Berne  <berne@notadragon.com>
+
+	PR c++/127281
+	* g++.dg/contracts/cpp26/dcl.contract.res.p1-NT.C: Added runtime
+	testing, along with tests of NRVO and exceptions from local
+	variables.
+
+2026-09-20  Joshua Berne  <berne@notadragon.com>
+
+	PR c++/127295
+	* g++.dg/contracts/cpp26/assertion-statement.C: Add use of
+	__contract_assert.
+	* g++.dg/contracts/cpp26/assertion-statement-errors.C: Test
+	attribute warning with __contract_assert.
+	* g++.dg/contracts/cpp26/no_contracts.C: Check keyword errors with
+	-fno-contracts.
+
+2026-09-20  Iain Sandoe  <iain@sandoe.co.uk>
+
+	* lib/target-supports.exp (check_avx512_os_support_available):
+	Query the kernel for avx512 availability on Darwin.
+
+2026-09-20  Yongqiang Tian  <yqtian668@gmail.com>
+
+	PR rtl-optimization/127423
+	* gcc.target/riscv/pr127423.c: New test.
+
+2026-09-20  Philipp Tomsich  <philipp.tomsich@vrull.eu>
+	    Konstantinos Eleftheriou  <konstantinos.eleftheriou@vrull.eu>
+
+	PR tree-optimization/127042
+	* gcc.target/arm/pr127042.c: New test.
+	* gcc.target/avr/mmcu/pr127042.c: New test.
+
+2026-09-20  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.dg/tree-ssa/loop-im-shift-2.c: Expect every chain but a lone
+	shift's to move; check the masks.
+	* gcc.dg/tree-ssa/loop-im-shift-3.c: New test.
+	* gcc.dg/tree-ssa/loop-im-shift-4.c: New test.
+	* gcc.dg/tree-ssa/loop-im-shift-5.c: New test.
+	* gcc.dg/tree-ssa/loop-im-shift-6.c: New test.
+
+2026-09-20  Konstantinos Eleftheriou  <konstantinos.eleftheriou@vrull.eu>
+
+	PR rtl-optimization/126412
+	* gcc.target/arm/pr126412.c: New test.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/sat-trunc-signed-cmp-2.c: New test.
+	* gcc.dg/vect/vect-sat-trunc-complement-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-complement-1.c: Likewise.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/vect/vect-sat-trunc-clamp-2.c: New test.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-s-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-s-negative-1.c: Likewise.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/vect/vect-sat-trunc-clamp-1.c: New test.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-inner-use-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-multi-use-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-u-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-clamp-u-negative-1.c: Likewise.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/vect/vect-sat-trunc-shift-sign-source-1.c: New test.
+	* gcc.target/aarch64/sat_s_val_ashr-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-shift-sign-source-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-shift-sign-source-negative-1.c:
+	Likewise.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_u_add_widen_lt-1.c: New test.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_s_clamp-1.c: New test.
+	* gcc.target/aarch64/sat_s_clamp-2.c: New test.
+
+2026-09-20  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/vect/vect-sat-trunc-range-precision-1.c: New test.
+	* gcc.target/aarch64/vect-sat-trunc-range-precision-1.c: Likewise.
+	* gcc.target/aarch64/vect-sat-trunc-range-precision-negative-1.c:
+	Likewise.
+
+2026-09-20  Stefan Schulze Frielinghaus  <stefansf@gcc.gnu.org>
+
+	PR middle-end/127474
+	* gcc.dg/torture/pr127474.c: New test.
+
+2026-09-20  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* algol68/compile/error-bits-denotation-1.a68: Test for overflow
+	of bits and long bits.
+
+2026-09-19  John David Anglin  <danglin@gcc.gnu.org>
+
+	* gcc.dg/tree-ssa/pr125734.c: xfail on hppa*-*-hpux*.
+
+2026-09-19  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/127053
+	* g++.dg/tree-ssa/cselim-2.C: New test.
+	* gcc.dg/torture/cselim-1.c: New test.
+
+2026-09-19  John David Anglin  <danglin@gcc.gnu.org>
+
+	* gcc.dg/tree-ssa/cswtch-6.c: xfail on hppa*-*-hpux*.
+	* gcc.dg/tree-ssa/cswtch-7.c: Likewise.
+
+2026-09-19  Yongqiang Tian  <yqtian668@gmail.com>
+
+	PR target/127460
+	* gcc.target/pru/pr127460.c: New test.
+
+2026-09-19  panciyan  <panciyan@eswincomputing.com>
+
+	* gcc.target/riscv/zilsd-align-split-arg-1.c: New test.
+	* gcc.target/riscv/zilsd-align-split-arg-2.c: New test.
+	* gcc.target/riscv/zilsd-align-split-arg-3.c: New test.
+	* gcc.target/riscv/zilsd-align-split-arg-4.c: New test.
+
+2026-09-19  Milan Tripkovic  <Milan.Tripkovic@rt-rk.com>
+
+	PR target/127374
+	* gcc.target/riscv/czero-bext.c: Change scan assembler
+	* gcc.target/riscv/pr127374.c: New test.
+
+2026-09-19  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.target/aarch64/postreload-implicit-set-1.c: New test.
+	* gcc.target/arm/postreload-implicit-set-1.c: New test.
+	* gcc.target/arm/postreload-implicit-set-2.c: New test.
+	* gcc.target/i386/postreload-implicit-set-1.c: New test.
+
+2026-09-19  Jeff Law  <jeffreyalaw@gmail.com>
+
+	* gcc.target/riscv/rvv/autovec/sat/vec_sat_u_sub_trunc-1-u8.c: Update
+	test expectations.
+
+2026-09-19  Milan Tripkovic  <Milan.Tripkovic@rt-rk.com>
+
+	PR target/126074
+	* gcc.target/riscv/pr126074.c: New test.
+
+2026-09-18  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/125945
+	* gcc.dg/tree-ssa/scc-diamond-1.c: Update to look at phiopt2
+	rather than phiopt4.
+	* gcc.dg/tree-ssa/scc-diamond-3.c: Likewise.
+	* gcc.dg/tree-ssa/factor_op_phi-load-vect-1.c: New test.
+
+2026-09-18  Michiel Derhaeg  <michiel@derhaeg.be>
+
+	* gcc.target/riscv/zba-shNadd-11.c: New test.
+
+2026-09-18  Zhongyao Chen  <chenzhongyao.hit@gmail.com>
+
+	PR rtl-optimization/127367
+	* gcc.dg/torture/pr127367.c: New test.
+
+2026-09-18  Bohan Lei  <garthlei@linux.alibaba.com>
+
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul-mixed-1.c: Update
+	expectation.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-1.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-2.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-3.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-4.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-5.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-6.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul1-7.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul2-1.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul2-3.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul2-4.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul2-5.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul2-6.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul4-6.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/dynamic-lmul8-12.c: Ditto.
+	* gcc.dg/vect/costmodel/riscv/rvv/pr111848.c: Ditto.
+	* gcc.target/riscv/rvv/autovec/partial/slp-16.c: Ditto.
+	* gcc.target/riscv/rvv/autovec/sat/vec_sat_u_sub_zip.c: Ditto.
+
+2026-09-18  Michiel Derhaeg  <michiel@derhaeg.be>
+
+	* gcc.dg/tree-ssa/predcom-10.c: Pass in expected value
+	explicitly instead of deriving it from argc.
+
+2026-09-18  Robert Dubner  <rdubner@symas.com>
+
+	PR cobol/127412
+	* cobol.dg/group2/CBL_DELETE_FILE.cob: Minor logic change.
+	* cobol.dg/group2/CBL_DELETE_FILE.out: Likewise.
+	* cobol.dg/group2/CBL_OPEN_FILE___CBL_CLOSE_FILE.cob: Likewise.
+	* cobol.dg/group2/CBL_OPEN_FILE___CBL_CLOSE_FILE.out: Likewise.
+	* cobol.dg/group2/CBL_READ_FILE__check_file_size_with_flags___128.cob:
+	Likewise.
+	* cobol.dg/group2/CDF_Feature_.cob: Switch to "ibm1140".
+	* cobol.dg/group2/CHAR_and_ORD_with_COLLATING_sequence_-_EBCDIC.cob:
+	Likewise.
+	* cobol.dg/group2/FIND-STRING__forward_.cob: Likewise.
+	* cobol.dg/group2/FIND-STRING__reverse_.cob: Likewise.
+	* cobol.dg/group2/FUNCTION_CONVERT.cob: Likewise.
+	* cobol.dg/group2/CBL_CHECK_FILE_EXIST__known_timestamp_.cob: New test.
+	* cobol.dg/group2/MF__identifier_as_PIC_X_ANY_LENGTH.cob: New test.
+
+2026-09-18  Richard Ball  <Richard.Ball@arm.com>
+
+	* gcc.target/aarch64/atomic_fetch_add_with_shuh.c: New test.
+	* gcc.target/aarch64/atomic_fetch_and_with_shuh.c: New test.
+	* gcc.target/aarch64/atomic_fetch_or_with_shuh.c: New test.
+	* gcc.target/aarch64/atomic_fetch_sub_with_shuh.c: New test.
+	* gcc.target/aarch64/atomic_fetch_xor_with_shuh.c: New test.
+
+2026-09-18  Richard Ball  <Richard.Ball@arm.com>
+
+	* g++.target/aarch64/atomic_store_with_stshh.C: Change Function name.
+	* gcc.target/aarch64/atomic_store_with_stshh.c: Likewise.
+	* gcc.target/aarch64/atomic_store_with_shuh.c: New test.
+	* gcc.target/aarch64/atomic_store_with_stcph.c: New test.
+
+2026-09-18  John David Anglin  <danglin@gcc.gnu.org>
+
+	* gcc.dg/analyzer/atoi-1.c: Skip atoll hunk on hpux.
+	* gcc.dg/analyzer/fd-mktemp-family.c: Skip on hpux.
+	* gcc.dg/analyzer/mkdtemp-1.c: Likewise.
+	* gcc.dg/analyzer/mkostemp-1.c: Likewise.
+	* gcc.dg/analyzer/mkostemps-1.c: Likewise.
+	* gcc.dg/analyzer/mkstemps-1.c: Likewise.
+
+2026-09-18  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/127146
+	* gfortran.dg/pdt_96.f03: New test.
+
+2026-09-18  Kael Andrew Alonzo Franco  <kaelfandrew@gmail.com>
+
+	PR tree-optimization/127406
+	* gcc.dg/torture/pr127406.c: New test.
+
+2026-09-18  Jakub Jelinek  <jakub@redhat.com>
+
+	* gcc.dg/bitint-142.c (main): Don't set z to ~0, instead memset
+	it to ~0.
+
+2026-09-18  Jakub Jelinek  <jakub@redhat.com>
+
+	* g++.dg/cpp29/std-floating1.C: Add 2 dg-bogus directives xfailed
+	for long_double_is_ibm128 effective targets.
+
+2026-09-18  Jakub Jelinek  <jakub@redhat.com>
+	    Manjunath Matti  <mmatti@linux.ibm.com>
+
+	PR middle-end/127378
+	* gcc.dg/bitint-145.c: New test.
+
+2026-09-18  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/126306
+	* gcc.dg/vect/bb-slp-pr126306-1.c: New testcase.
+
+2026-09-18  Jakub Jelinek  <jakub@redhat.com>
+
+	* c-c++-common/cpp/named-universal-char-escape-1.c: Add tests
+	for some Unicode 18.0 characters, both normal and generated.
+
+2026-09-18  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u16-m8.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u32-m8.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u8-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u8-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u8-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsumu_vs-u8-m8.c: New test.
+
+2026-09-18  Pan Li  <pan2.li@intel.com>
+
+	* gcc.target/riscv/rvv/autovec/group_overlap/group_overlap.h:
+	Add test helper macros.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i16-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i16-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i16-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i16-m8.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i32-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i32-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i32-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i32-m8.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i8-m1.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i8-m2.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i8-m4.c: New test.
+	* gcc.target/riscv/rvv/autovec/group_overlap/vwredsum_vs-i8-m8.c: New test.
+
+2026-09-18  Yongqiang Tian  <yqtian668@gmail.com>
+
+	PR rtl-optimization/127421
+	* gcc.target/sparc/pr127421.c: New test.
+
+2026-09-18  Yongqiang Tian  <yqtian668@gmail.com>
+
+	PR rtl-optimization/127422
+	* gcc.dg/pr127422.c: New test.
+
+2026-09-18  Xi Ruoyao  <xry111@xry111.site>
+
+	* gcc.target/loongarch/bitreverse-la32r.c: New test.
+
+2026-09-17  Andrew MacLeod  <amacleod@redhat.com>
+
+	* gcc.dg/tree-ssa/vrp-rel3.c: New.
+
+2026-09-17  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/125690
+	* gfortran.dg/pdt_95.f03: New test.
+
+2026-09-17  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/104776
+	* gfortran.dg/pdt_94.f03: New test.
+
+2026-09-17  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127405
+	* gcc.dg/tree-ssa/predcom-10.c: New test.
+
+2026-09-17  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127407
+	* gcc.dg/vect/vect-pr127407.c: New testcase.
+
+2026-09-17  Andrew Stubbs  <ams@baylibre.com>
+
+	* gcc.target/gcn/avgpr-spill-int.c: Increase register pressure.
+	* gcc.target/gcn/sgpr-spill-double.c: Allow some AVGPR spills.
+	* gcc.target/gcn/sgpr-spill-int.c: Likewise.
+	* gcc.target/gcn/sgpr-spill-long.c: Likewise.
+	* gcc.target/gcn/sgpr-spill-short.c: Likewise.
+
+2026-09-17  Michiel Derhaeg  <michiel.derhaeg@globalfoundries.com>
+
+	PR target/127191
+	* gcc.target/arc/pr127191-1.c: New test.
+	* gcc.target/arc/pr127191-2.c: New test.
+
+2026-09-17  Longjun Luo  <luolongjuna@gmail.com>
+
+	PR lto/126841
+	* gcc.dg/lto/pr126841-strub_0.c: New test.
+	* gcc.dg/lto/pr126841-strub_1.c: New test.
+	* gcc.dg/lto/pr126841_0.c: New test.
+	* gcc.dg/lto/pr126841_1.c: New test.
+	* gcc.dg/lto/pr126841_2.c: New test.
+	* gcc.dg/lto/pr126841_3.c: New test.
+
+2026-09-17  Robert Dubner  <rdubner@symas.com>
+
+	* cobol.dg/group2/PR126612_-_Ignore_TRACE_-_gnu.cob: New test.
+	* cobol.dg/group2/PR126612_-_Ignore_TRACE_-_ibm.cob: New test.
+	* cobol.dg/group2/PR126612_-_Ignore_TRACE_-_iso.cob: New test.
+	* cobol.dg/group2/PR126612_-_Ignore_TRACE_-_mf.cob: New test.
+	* cobol.dg/group2/RT3611_-_BY_CONTENT_LENGTH_OF.cob: New test.
+	* cobol.dg/group2/__define__text_.cob: New test.
+	* cobol.dg/group2/__define__text_.out: New test.
+	* cobol.dg/group2/customer_bug_Heuristic_Fail.cob: New test.
+	* cobol.dg/group2/customer_bug_Heuristic_Fail.out: New test.
+
+2026-09-17  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/127103
+	* gcc.dg/tree-ssa/minmax-plus-1.c: New test.
+
+2026-09-17  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/127103
+	* gcc.dg/tree-ssa/max1-plus-1.c: New test.
+
+2026-09-16  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c/127383
+	* gcc.dg/torture/bitint-108.c: New test.
+	* gcc.dg/bitint-143.c: New test.
+	* gcc.dg/bitint-144.c: New test.
+
+2026-09-16  Pietro Monteiro  <pietro@sociotechnical.xyz>
+
+	* algol68/execute/backslash-1.a68: New test.
+
+2026-09-16  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.dg/tree-prof/lto-save-temps-profile-use.c: New test.
+
+2026-09-16  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/platform_intrinsics.rs: New file.
+
+2026-09-16  Arthur Cohen  <arthur.cohen@opensrcsec.com>
+
+	* rust/compile/cfi-encoding1.rs: New test.
+	* rust/compile/cfi-encoding2.rs: New test.
+
+2026-09-16  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/alloc/alloc.exp: Test with edition 2018.
+	* rust/alloc/core.rs: Fix some use declaration paths and use raw
+	identifiers for "try".
+
+2026-09-16  Pierre-Emmanuel Patry  <pierre.emmanuel.patry@opensrcsec.com>
+
+	* rust/compile/torture/issue-1024.rs: Move to...
+	* rust/compile/torture/issues/1024.rs: ...here.
+	* rust/compile/torture/issue-1075.rs: Move to...
+	* rust/compile/torture/issues/1075.rs: ...here.
+	* rust/compile/torture/issue-1432.rs: Move to...
+	* rust/compile/torture/issues/1432.rs: ...here.
+	* rust/compile/torture/issue-1434.rs: Move to...
+	* rust/compile/torture/issues/1434.rs: ...here.
+	* rust/compile/torture/issue-1506.rs: Move to...
+	* rust/compile/torture/issues/1506.rs: ...here.
+	* rust/compile/torture/issue-1555.rs: Move to...
+	* rust/compile/torture/issues/1555.rs: ...here.
+	* rust/compile/torture/issue-368.rs: Move to...
+	* rust/compile/torture/issues/368.rs: ...here.
+	* rust/compile/torture/issue-808.rs: Move to...
+	* rust/compile/torture/issues/808.rs: ...here.
+	* rust/compile/torture/issue-862.rs: Move to...
+	* rust/compile/torture/issues/862.rs: ...here.
+	* rust/compile/torture/issue-893-2.rs: Move to...
+	* rust/compile/torture/issues/893-2.rs: ...here.
+	* rust/compile/torture/issue-893.rs: Move to...
+	* rust/compile/torture/issues/893.rs: ...here.
+	* rust/compile/torture/issues/issues.exp: Copy DG testsuite file from
+	parent directory.
+
+2026-09-16  Pierre-Emmanuel Patry  <pierre.emmanuel.patry@opensrcsec.com>
+
+	* rust/compile/issue-1005.rs: Move to...
+	* rust/compile/issues/1005.rs: ...here.
+	* rust/compile/issue-1006.rs: Move to...
+	* rust/compile/issues/1006.rs: ...here.
+	* rust/compile/issue-1019.rs: Move to...
+	* rust/compile/issues/1019.rs: ...here.
+	* rust/compile/issue-1023.rs: Move to...
+	* rust/compile/issues/1023.rs: ...here.
+	* rust/compile/issue-1031.rs: Move to...
+	* rust/compile/issues/1031.rs: ...here.
+	* rust/compile/issue-1034.rs: Move to...
+	* rust/compile/issues/1034.rs: ...here.
+	* rust/compile/issue-1048.rs: Move to...
+	* rust/compile/issues/1048.rs: ...here.
+	* rust/compile/issue-1073.rs: Move to...
+	* rust/compile/issues/1073.rs: ...here.
+	* rust/compile/issue-1081.rs: Move to...
+	* rust/compile/issues/1081.rs: ...here.
+	* rust/compile/issue-1089.rs: Move to...
+	* rust/compile/issues/1089.rs: ...here.
+	* rust/compile/issue-1089/test_mod.rs: Move to...
+	* rust/compile/issues/1089/test_mod.rs: ...here.
+	* rust/compile/issue-1128.rs: Move to...
+	* rust/compile/issues/1128.rs: ...here.
+	* rust/compile/issue-1129-1.rs: Move to...
+	* rust/compile/issues/1129-1.rs: ...here.
+	* rust/compile/issue-1129-2.rs: Move to...
+	* rust/compile/issues/1129-2.rs: ...here.
+	* rust/compile/issue-1130.rs: Move to...
+	* rust/compile/issues/1130.rs: ...here.
+	* rust/compile/issue-1131.rs: Move to...
+	* rust/compile/issues/1131.rs: ...here.
+	* rust/compile/issue-1152.rs: Move to...
+	* rust/compile/issues/1152.rs: ...here.
+	* rust/compile/issue-1165.rs: Move to...
+	* rust/compile/issues/1165.rs: ...here.
+	* rust/compile/issue-1173.rs: Move to...
+	* rust/compile/issues/1173.rs: ...here.
+	* rust/compile/issue-1210.rs: Move to...
+	* rust/compile/issues/1210.rs: ...here.
+	* rust/compile/issue-1226.rs: Move to...
+	* rust/compile/issues/1226.rs: ...here.
+	* rust/compile/issue-1234.rs: Move to...
+	* rust/compile/issues/1234.rs: ...here.
+	* rust/compile/issue-1235.rs: Move to...
+	* rust/compile/issues/1235.rs: ...here.
+	* rust/compile/issue-1237.rs: Move to...
+	* rust/compile/issues/1237.rs: ...here.
+	* rust/compile/issue-1251.rs: Move to...
+	* rust/compile/issues/1251.rs: ...here.
+	* rust/compile/issue-1271.rs: Move to...
+	* rust/compile/issues/1271.rs: ...here.
+	* rust/compile/issue-1272.rs: Move to...
+	* rust/compile/issues/1272.rs: ...here.
+	* rust/compile/issue-1289.rs: Move to...
+	* rust/compile/issues/1289.rs: ...here.
+	* rust/compile/issue-1323-1.rs: Move to...
+	* rust/compile/issues/1323-1.rs: ...here.
+	* rust/compile/issue-1323-2.rs: Move to...
+	* rust/compile/issues/1323-2.rs: ...here.
+	* rust/compile/issue-1361.rs: Move to...
+	* rust/compile/issues/1361.rs: ...here.
+	* rust/compile/issue-1383.rs: Move to...
+	* rust/compile/issues/1383.rs: ...here.
+	* rust/compile/issue-1393.rs: Move to...
+	* rust/compile/issues/1393.rs: ...here.
+	* rust/compile/issue-1422.rs: Move to...
+	* rust/compile/issues/1422.rs: ...here.
+	* rust/compile/issue-1446.rs: Move to...
+	* rust/compile/issues/1446.rs: ...here.
+	* rust/compile/issue-1447.rs: Move to...
+	* rust/compile/issues/1447.rs: ...here.
+	* rust/compile/issue-1483.rs: Move to...
+	* rust/compile/issues/1483.rs: ...here.
+	* rust/compile/issue-1485.rs: Move to...
+	* rust/compile/issues/1485.rs: ...here.
+	* rust/compile/issue-1487.rs: Move to...
+	* rust/compile/issues/1487.rs: ...here.
+	* rust/compile/issue-1524.rs: Move to...
+	* rust/compile/issues/1524.rs: ...here.
+	* rust/compile/issue-1525.rs: Move to...
+	* rust/compile/issues/1525.rs: ...here.
+	* rust/compile/issue-1553.rs: Move to...
+	* rust/compile/issues/1553.rs: ...here.
+	* rust/compile/issue-1589.rs: Move to...
+	* rust/compile/issues/1589.rs: ...here.
+	* rust/compile/issue-1725-1.rs: Move to...
+	* rust/compile/issues/1725-1.rs: ...here.
+	* rust/compile/issue-1725-2.rs: Move to...
+	* rust/compile/issues/1725-2.rs: ...here.
+	* rust/compile/issue-1726-1.rs: Move to...
+	* rust/compile/issues/1726-1.rs: ...here.
+	* rust/compile/issue-1726-2.rs: Move to...
+	* rust/compile/issues/1726-2.rs: ...here.
+	* rust/compile/issue-1773.rs: Move to...
+	* rust/compile/issues/1773.rs: ...here.
+	* rust/compile/issue-1786.rs: Move to...
+	* rust/compile/issues/1786.rs: ...here.
+	* rust/compile/issue-1807.rs: Move to...
+	* rust/compile/issues/1807.rs: ...here.
+	* rust/compile/issue-1813.rs: Move to...
+	* rust/compile/issues/1813.rs: ...here.
+	* rust/compile/issue-1830_bytes.rs: Move to...
+	* rust/compile/issues/1830_bytes.rs: ...here.
+	* rust/compile/issue-1830_str.rs: Move to...
+	* rust/compile/issues/1830_str.rs: ...here.
+	* rust/compile/issue-1893.rs: Move to...
+	* rust/compile/issues/1893.rs: ...here.
+	* rust/compile/issue-1901.rs: Move to...
+	* rust/compile/issues/1901.rs: ...here.
+	* rust/compile/issue-1930.rs: Move to...
+	* rust/compile/issues/1930.rs: ...here.
+	* rust/compile/issue-1981.rs: Move to...
+	* rust/compile/issues/1981.rs: ...here.
+	* rust/compile/issue-2015.rs: Move to...
+	* rust/compile/issues/2015.rs: ...here.
+	* rust/compile/issue-2019-1.rs: Move to...
+	* rust/compile/issues/2019-1.rs: ...here.
+	* rust/compile/issue-2019-2.rs: Move to...
+	* rust/compile/issues/2019-2.rs: ...here.
+	* rust/compile/issue-2019-3.rs: Move to...
+	* rust/compile/issues/2019-3.rs: ...here.
+	* rust/compile/issue-2029.rs: Move to...
+	* rust/compile/issues/2029.rs: ...here.
+	* rust/compile/issue-2035.rs: Move to...
+	* rust/compile/issues/2035.rs: ...here.
+	* rust/compile/issue-2036.rs: Move to...
+	* rust/compile/issues/2036.rs: ...here.
+	* rust/compile/issue-2037.rs: Move to...
+	* rust/compile/issues/2037.rs: ...here.
+	* rust/compile/issue-2039.rs: Move to...
+	* rust/compile/issues/2039.rs: ...here.
+	* rust/compile/issue-2040.rs: Move to...
+	* rust/compile/issues/2040.rs: ...here.
+	* rust/compile/issue-2042.rs: Move to...
+	* rust/compile/issues/2042.rs: ...here.
+	* rust/compile/issue-2043.rs: Move to...
+	* rust/compile/issues/2043.rs: ...here.
+	* rust/compile/issue-2070.rs: Move to...
+	* rust/compile/issues/2070.rs: ...here.
+	* rust/compile/issue-2105.rs: Move to...
+	* rust/compile/issues/2105.rs: ...here.
+	* rust/compile/issue-2106.rs: Move to...
+	* rust/compile/issues/2106.rs: ...here.
+	* rust/compile/issue-2125.rs: Move to...
+	* rust/compile/issues/2125.rs: ...here.
+	* rust/compile/issue-2135.rs: Move to...
+	* rust/compile/issues/2135.rs: ...here.
+	* rust/compile/issue-2136-1.rs: Move to...
+	* rust/compile/issues/2136-1.rs: ...here.
+	* rust/compile/issue-2136-2.rs: Move to...
+	* rust/compile/issues/2136-2.rs: ...here.
+	* rust/compile/issue-2139.rs: Move to...
+	* rust/compile/issues/2139.rs: ...here.
+	* rust/compile/issue-2142.rs: Move to...
+	* rust/compile/issues/2142.rs: ...here.
+	* rust/compile/issue-2165.rs: Move to...
+	* rust/compile/issues/2165.rs: ...here.
+	* rust/compile/issue-2166.rs: Move to...
+	* rust/compile/issues/2166.rs: ...here.
+	* rust/compile/issue-2178.rs: Move to...
+	* rust/compile/issues/2178.rs: ...here.
+	* rust/compile/issue-2187.rs: Move to...
+	* rust/compile/issues/2187.rs: ...here.
+	* rust/compile/issue-2188.rs: Move to...
+	* rust/compile/issues/2188.rs: ...here.
+	* rust/compile/issue-2189.rs: Move to...
+	* rust/compile/issues/2189.rs: ...here.
+	* rust/compile/issue-2190-1.rs: Move to...
+	* rust/compile/issues/2190-1.rs: ...here.
+	* rust/compile/issue-2190-2.rs: Move to...
+	* rust/compile/issues/2190-2.rs: ...here.
+	* rust/compile/issue-2195.rs: Move to...
+	* rust/compile/issues/2195.rs: ...here.
+	* rust/compile/issue-2203.rs: Move to...
+	* rust/compile/issues/2203.rs: ...here.
+	* rust/compile/issue-2207.rs: Move to...
+	* rust/compile/issues/2207.rs: ...here.
+	* rust/compile/issue-2225.rs: Move to...
+	* rust/compile/issues/2225.rs: ...here.
+	* rust/compile/issue-2238.rs: Move to...
+	* rust/compile/issues/2238.rs: ...here.
+	* rust/compile/issue-2304.rs: Move to...
+	* rust/compile/issues/2304.rs: ...here.
+	* rust/compile/issue-2323.rs: Move to...
+	* rust/compile/issues/2323.rs: ...here.
+	* rust/compile/issue-2324-1.rs: Move to...
+	* rust/compile/issues/2324-1.rs: ...here.
+	* rust/compile/issue-2324-2.rs: Move to...
+	* rust/compile/issues/2324-2.rs: ...here.
+	* rust/compile/issue-2330.rs: Move to...
+	* rust/compile/issues/2330.rs: ...here.
+	* rust/compile/issue-2369.rs: Move to...
+	* rust/compile/issues/2369.rs: ...here.
+	* rust/compile/issue-2375.rs: Move to...
+	* rust/compile/issues/2375.rs: ...here.
+	* rust/compile/issue-2391.rs: Move to...
+	* rust/compile/issues/2391.rs: ...here.
+	* rust/compile/issue-2394.rs: Move to...
+	* rust/compile/issues/2394.rs: ...here.
+	* rust/compile/issue-2421_str.rs: Move to...
+	* rust/compile/issues/2421_str.rs: ...here.
+	* rust/compile/issue-2423.rs: Move to...
+	* rust/compile/issues/2423.rs: ...here.
+	* rust/compile/issue-2431.rs: Move to...
+	* rust/compile/issues/2431.rs: ...here.
+	* rust/compile/issue-2477.rs: Move to...
+	* rust/compile/issues/2477.rs: ...here.
+	* rust/compile/issue-2478.rs: Move to...
+	* rust/compile/issues/2478.rs: ...here.
+	* rust/compile/issue-2479.rs: Move to...
+	* rust/compile/issues/2479.rs: ...here.
+	* rust/compile/issue-2499.rs: Move to...
+	* rust/compile/issues/2499.rs: ...here.
+	* rust/compile/issue-2514.rs: Move to...
+	* rust/compile/issues/2514.rs: ...here.
+	* rust/compile/issue-2567-1.rs: Move to...
+	* rust/compile/issues/2567-1.rs: ...here.
+	* rust/compile/issue-2567-2.rs: Move to...
+	* rust/compile/issues/2567-2.rs: ...here.
+	* rust/compile/issue-2567-3.rs: Move to...
+	* rust/compile/issues/2567-3.rs: ...here.
+	* rust/compile/issue-2645.rs: Move to...
+	* rust/compile/issues/2645.rs: ...here.
+	* rust/compile/issue-2650-1.rs: Move to...
+	* rust/compile/issues/2650-1.rs: ...here.
+	* rust/compile/issue-2650-2.rs: Move to...
+	* rust/compile/issues/2650-2.rs: ...here.
+	* rust/compile/issue-266.rs: Move to...
+	* rust/compile/issues/266.rs: ...here.
+	* rust/compile/issue-2665.rs: Move to...
+	* rust/compile/issues/2665.rs: ...here.
+	* rust/compile/issue-2680.rs: Move to...
+	* rust/compile/issues/2680.rs: ...here.
+	* rust/compile/issue-2709.rs: Move to...
+	* rust/compile/issues/2709.rs: ...here.
+	* rust/compile/issue-2723-1.rs: Move to...
+	* rust/compile/issues/2723-1.rs: ...here.
+	* rust/compile/issue-2723-2.rs: Move to...
+	* rust/compile/issues/2723-2.rs: ...here.
+	* rust/compile/issue-2725.rs: Move to...
+	* rust/compile/issues/2725.rs: ...here.
+	* rust/compile/issue-2747.rs: Move to...
+	* rust/compile/issues/2747.rs: ...here.
+	* rust/compile/issue-2767.rs: Move to...
+	* rust/compile/issues/2767.rs: ...here.
+	* rust/compile/issue-2772-1.rs: Move to...
+	* rust/compile/issues/2772-1.rs: ...here.
+	* rust/compile/issue-2772-2.rs: Move to...
+	* rust/compile/issues/2772-2.rs: ...here.
+	* rust/compile/issue-2775.rs: Move to...
+	* rust/compile/issues/2775.rs: ...here.
+	* rust/compile/issue-2782.rs: Move to...
+	* rust/compile/issues/2782.rs: ...here.
+	* rust/compile/issue-2785.rs: Move to...
+	* rust/compile/issues/2785.rs: ...here.
+	* rust/compile/issue-2788.rs: Move to...
+	* rust/compile/issues/2788.rs: ...here.
+	* rust/compile/issue-2812.rs: Move to...
+	* rust/compile/issues/2812.rs: ...here.
+	* rust/compile/issue-2847-b.rs: Move to...
+	* rust/compile/issues/2847-b.rs: ...here.
+	* rust/compile/issue-2847.rs: Move to...
+	* rust/compile/issues/2847.rs: ...here.
+	* rust/compile/issue-2850.rs: Move to...
+	* rust/compile/issues/2850.rs: ...here.
+	* rust/compile/issue-2905-1.rs: Move to...
+	* rust/compile/issues/2905-1.rs: ...here.
+	* rust/compile/issue-2905-2.rs: Move to...
+	* rust/compile/issues/2905-2.rs: ...here.
+	* rust/compile/issue-2906.rs: Move to...
+	* rust/compile/issues/2906.rs: ...here.
+	* rust/compile/issue-2907.rs: Move to...
+	* rust/compile/issues/2907.rs: ...here.
+	* rust/compile/issue-2951.rs: Move to...
+	* rust/compile/issues/2951.rs: ...here.
+	* rust/compile/issue-2953-1.rs: Move to...
+	* rust/compile/issues/2953-1.rs: ...here.
+	* rust/compile/issue-2953-2.rs: Move to...
+	* rust/compile/issues/2953-2.rs: ...here.
+	* rust/compile/issue-2954.rs: Move to...
+	* rust/compile/issues/2954.rs: ...here.
+	* rust/compile/issue-2987.rs: Move to...
+	* rust/compile/issues/2987.rs: ...here.
+	* rust/compile/issue-3009.rs: Move to...
+	* rust/compile/issues/3009.rs: ...here.
+	* rust/compile/issue-3022.rs: Move to...
+	* rust/compile/issues/3022.rs: ...here.
+	* rust/compile/issue-3030.rs: Move to...
+	* rust/compile/issues/3030.rs: ...here.
+	* rust/compile/issue-3031.rs: Move to...
+	* rust/compile/issues/3031.rs: ...here.
+	* rust/compile/issue-3032-1.rs: Move to...
+	* rust/compile/issues/3032-1.rs: ...here.
+	* rust/compile/issue-3032-2.rs: Move to...
+	* rust/compile/issues/3032-2.rs: ...here.
+	* rust/compile/issue-3033.rs: Move to...
+	* rust/compile/issues/3033.rs: ...here.
+	* rust/compile/issue-3035.rs: Move to...
+	* rust/compile/issues/3035.rs: ...here.
+	* rust/compile/issue-3036.rs: Move to...
+	* rust/compile/issues/3036.rs: ...here.
+	* rust/compile/issue-3045-1.rs: Move to...
+	* rust/compile/issues/3045-1.rs: ...here.
+	* rust/compile/issue-3045-2.rs: Move to...
+	* rust/compile/issues/3045-2.rs: ...here.
+	* rust/compile/issue-3046.rs: Move to...
+	* rust/compile/issues/3046.rs: ...here.
+	* rust/compile/issue-3082.rs: Move to...
+	* rust/compile/issues/3082.rs: ...here.
+	* rust/compile/issue-3139-1.rs: Move to...
+	* rust/compile/issues/3139-1.rs: ...here.
+	* rust/compile/issue-3139-2.rs: Move to...
+	* rust/compile/issues/3139-2.rs: ...here.
+	* rust/compile/issue-3139-3.rs: Move to...
+	* rust/compile/issues/3139-3.rs: ...here.
+	* rust/compile/issue-3140.rs: Move to...
+	* rust/compile/issues/3140.rs: ...here.
+	* rust/compile/issue-3141.rs: Move to...
+	* rust/compile/issues/3141.rs: ...here.
+	* rust/compile/issue-3144.rs: Move to...
+	* rust/compile/issues/3144.rs: ...here.
+	* rust/compile/issue-3174.rs: Move to...
+	* rust/compile/issues/3174.rs: ...here.
+	* rust/compile/issue-3231.rs: Move to...
+	* rust/compile/issues/3231.rs: ...here.
+	* rust/compile/issue-3242.rs: Move to...
+	* rust/compile/issues/3242.rs: ...here.
+	* rust/compile/issue-3261.rs: Move to...
+	* rust/compile/issues/3261.rs: ...here.
+	* rust/compile/issue-3304.rs: Move to...
+	* rust/compile/issues/3304.rs: ...here.
+	* rust/compile/issue-3315-1.rs: Move to...
+	* rust/compile/issues/3315-1.rs: ...here.
+	* rust/compile/issue-3315-2.rs: Move to...
+	* rust/compile/issues/3315-2.rs: ...here.
+	* rust/compile/issue-3350.rs: Move to...
+	* rust/compile/issues/3350.rs: ...here.
+	* rust/compile/issue-3382.rs: Move to...
+	* rust/compile/issues/3382.rs: ...here.
+	* rust/compile/issue-3402-1.rs: Move to...
+	* rust/compile/issues/3402-1.rs: ...here.
+	* rust/compile/issue-3402-2.rs: Move to...
+	* rust/compile/issues/3402-2.rs: ...here.
+	* rust/compile/issue-3403.rs: Move to...
+	* rust/compile/issues/3403.rs: ...here.
+	* rust/compile/issue-3454.rs: Move to...
+	* rust/compile/issues/3454.rs: ...here.
+	* rust/compile/issue-3524.rs: Move to...
+	* rust/compile/issues/3524.rs: ...here.
+	* rust/compile/issue-3525.rs: Move to...
+	* rust/compile/issues/3525.rs: ...here.
+	* rust/compile/issue-3530-1.rs: Move to...
+	* rust/compile/issues/3530-1.rs: ...here.
+	* rust/compile/issue-3530-2.rs: Move to...
+	* rust/compile/issues/3530-2.rs: ...here.
+	* rust/compile/issue-3537.rs: Move to...
+	* rust/compile/issues/3537.rs: ...here.
+	* rust/compile/issue-3538.rs: Move to...
+	* rust/compile/issues/3538.rs: ...here.
+	* rust/compile/issue-3541-1.rs: Move to...
+	* rust/compile/issues/3541-1.rs: ...here.
+	* rust/compile/issue-3541-2.rs: Move to...
+	* rust/compile/issues/3541-2.rs: ...here.
+	* rust/compile/issue-3546.rs: Move to...
+	* rust/compile/issues/3546.rs: ...here.
+	* rust/compile/issue-3549.rs: Move to...
+	* rust/compile/issues/3549.rs: ...here.
+	* rust/compile/issue-3550.rs: Move to...
+	* rust/compile/issues/3550.rs: ...here.
+	* rust/compile/issue-3551.rs: Move to...
+	* rust/compile/issues/3551.rs: ...here.
+	* rust/compile/issue-3552.rs: Move to...
+	* rust/compile/issues/3552.rs: ...here.
+	* rust/compile/issue-3553.rs: Move to...
+	* rust/compile/issues/3553.rs: ...here.
+	* rust/compile/issue-3554-1.rs: Move to...
+	* rust/compile/issues/3554-1.rs: ...here.
+	* rust/compile/issue-3554-2.rs: Move to...
+	* rust/compile/issues/3554-2.rs: ...here.
+	* rust/compile/issue-3555.rs: Move to...
+	* rust/compile/issues/3555.rs: ...here.
+	* rust/compile/issue-3556.rs: Move to...
+	* rust/compile/issues/3556.rs: ...here.
+	* rust/compile/issue-3563.rs: Move to...
+	* rust/compile/issues/3563.rs: ...here.
+	* rust/compile/issue-3566-1.rs: Move to...
+	* rust/compile/issues/3566-1.rs: ...here.
+	* rust/compile/issue-3566-2.rs: Move to...
+	* rust/compile/issues/3566-2.rs: ...here.
+	* rust/compile/issue-3567.rs: Move to...
+	* rust/compile/issues/3567.rs: ...here.
+	* rust/compile/issue-3568.rs: Move to...
+	* rust/compile/issues/3568.rs: ...here.
+	* rust/compile/issue-3581-1.rs: Move to...
+	* rust/compile/issues/3581-1.rs: ...here.
+	* rust/compile/issue-3581-2.rs: Move to...
+	* rust/compile/issues/3581-2.rs: ...here.
+	* rust/compile/issue-3585-1.rs: Move to...
+	* rust/compile/issues/3585-1.rs: ...here.
+	* rust/compile/issue-3585-2.rs: Move to...
+	* rust/compile/issues/3585-2.rs: ...here.
+	* rust/compile/issue-3588.rs: Move to...
+	* rust/compile/issues/3588.rs: ...here.
+	* rust/compile/issue-3591.rs: Move to...
+	* rust/compile/issues/3591.rs: ...here.
+	* rust/compile/issue-3592.rs: Move to...
+	* rust/compile/issues/3592.rs: ...here.
+	* rust/compile/issue-3597.rs: Move to...
+	* rust/compile/issues/3597.rs: ...here.
+	* rust/compile/issue-3599.rs: Move to...
+	* rust/compile/issues/3599.rs: ...here.
+	* rust/compile/issue-3605.rs: Move to...
+	* rust/compile/issues/3605.rs: ...here.
+	* rust/compile/issue-3606.rs: Move to...
+	* rust/compile/issues/3606.rs: ...here.
+	* rust/compile/issue-3612.rs: Move to...
+	* rust/compile/issues/3612.rs: ...here.
+	* rust/compile/issue-3613.rs: Move to...
+	* rust/compile/issues/3613.rs: ...here.
+	* rust/compile/issue-3614.rs: Move to...
+	* rust/compile/issues/3614.rs: ...here.
+	* rust/compile/issue-3615.rs: Move to...
+	* rust/compile/issues/3615.rs: ...here.
+	* rust/compile/issue-3617.rs: Move to...
+	* rust/compile/issues/3617.rs: ...here.
+	* rust/compile/issue-3618.rs: Move to...
+	* rust/compile/issues/3618.rs: ...here.
+	* rust/compile/issue-3625.rs: Move to...
+	* rust/compile/issues/3625.rs: ...here.
+	* rust/compile/issue-3628.rs: Move to...
+	* rust/compile/issues/3628.rs: ...here.
+	* rust/compile/issue-3642.rs: Move to...
+	* rust/compile/issues/3642.rs: ...here.
+	* rust/compile/issue-3643.rs: Move to...
+	* rust/compile/issues/3643.rs: ...here.
+	* rust/compile/issue-3645.rs: Move to...
+	* rust/compile/issues/3645.rs: ...here.
+	* rust/compile/issue-3646.rs: Move to...
+	* rust/compile/issues/3646.rs: ...here.
+	* rust/compile/issue-3647.rs: Move to...
+	* rust/compile/issues/3647.rs: ...here.
+	* rust/compile/issue-3648.rs: Move to...
+	* rust/compile/issues/3648.rs: ...here.
+	* rust/compile/issue-3649.rs: Move to...
+	* rust/compile/issues/3649.rs: ...here.
+	* rust/compile/issue-3651.rs: Move to...
+	* rust/compile/issues/3651.rs: ...here.
+	* rust/compile/issue-3652.rs: Move to...
+	* rust/compile/issues/3652.rs: ...here.
+	* rust/compile/issue-3654.rs: Move to...
+	* rust/compile/issues/3654.rs: ...here.
+	* rust/compile/issue-3656.rs: Move to...
+	* rust/compile/issues/3656.rs: ...here.
+	* rust/compile/issue-3657.rs: Move to...
+	* rust/compile/issues/3657.rs: ...here.
+	* rust/compile/issue-3659.rs: Move to...
+	* rust/compile/issues/3659.rs: ...here.
+	* rust/compile/issue-3660.rs: Move to...
+	* rust/compile/issues/3660.rs: ...here.
+	* rust/compile/issue-3661.rs: Move to...
+	* rust/compile/issues/3661.rs: ...here.
+	* rust/compile/issue-3662.rs: Move to...
+	* rust/compile/issues/3662.rs: ...here.
+	* rust/compile/issue-3663.rs: Move to...
+	* rust/compile/issues/3663.rs: ...here.
+	* rust/compile/issue-3664.rs: Move to...
+	* rust/compile/issues/3664.rs: ...here.
+	* rust/compile/issue-3665.rs: Move to...
+	* rust/compile/issues/3665.rs: ...here.
+	* rust/compile/issue-3667.rs: Move to...
+	* rust/compile/issues/3667.rs: ...here.
+	* rust/compile/issue-3670.rs: Move to...
+	* rust/compile/issues/3670.rs: ...here.
+	* rust/compile/issue-3671.rs: Move to...
+	* rust/compile/issues/3671.rs: ...here.
+	* rust/compile/issue-3672.rs: Move to...
+	* rust/compile/issues/3672.rs: ...here.
+	* rust/compile/issue-3711.rs: Move to...
+	* rust/compile/issues/3711.rs: ...here.
+	* rust/compile/issue-3726.rs: Move to...
+	* rust/compile/issues/3726.rs: ...here.
+	* rust/compile/issue-3836.rs: Move to...
+	* rust/compile/issues/3836.rs: ...here.
+	* rust/compile/issue-3874.rs: Move to...
+	* rust/compile/issues/3874.rs: ...here.
+	* rust/compile/issue-3875.rs: Move to...
+	* rust/compile/issues/3875.rs: ...here.
+	* rust/compile/issue-3876.rs: Move to...
+	* rust/compile/issues/3876.rs: ...here.
+	* rust/compile/issue-3885.rs: Move to...
+	* rust/compile/issues/3885.rs: ...here.
+	* rust/compile/issue-3898.rs: Move to...
+	* rust/compile/issues/3898.rs: ...here.
+	* rust/compile/issue-3904.rs: Move to...
+	* rust/compile/issues/3904.rs: ...here.
+	* rust/compile/issue-3910.rs: Move to...
+	* rust/compile/issues/3910.rs: ...here.
+	* rust/compile/issue-3915.rs: Move to...
+	* rust/compile/issues/3915.rs: ...here.
+	* rust/compile/issue-3916.rs: Move to...
+	* rust/compile/issues/3916.rs: ...here.
+	* rust/compile/issue-3919-ice-func-parms.rs: Move to...
+	* rust/compile/issues/3919-ice-func-parms.rs: ...here.
+	* rust/compile/issue-3922.rs: Move to...
+	* rust/compile/issues/3922.rs: ...here.
+	* rust/compile/issue-3924.rs: Move to...
+	* rust/compile/issues/3924.rs: ...here.
+	* rust/compile/issue-3928.rs: Move to...
+	* rust/compile/issues/3928.rs: ...here.
+	* rust/compile/issue-3929-1.rs: Move to...
+	* rust/compile/issues/3929-1.rs: ...here.
+	* rust/compile/issue-3929-2.rs: Move to...
+	* rust/compile/issues/3929-2.rs: ...here.
+	* rust/compile/issue-3930.rs: Move to...
+	* rust/compile/issues/3930.rs: ...here.
+	* rust/compile/issue-3931.rs: Move to...
+	* rust/compile/issues/3931.rs: ...here.
+	* rust/compile/issue-3947.rs: Move to...
+	* rust/compile/issues/3947.rs: ...here.
+	* rust/compile/issue-3951.rs: Move to...
+	* rust/compile/issues/3951.rs: ...here.
+	* rust/compile/issue-3958.rs: Move to...
+	* rust/compile/issues/3958.rs: ...here.
+	* rust/compile/issue-3960.rs: Move to...
+	* rust/compile/issues/3960.rs: ...here.
+	* rust/compile/issue-3965-1.rs: Move to...
+	* rust/compile/issues/3965-1.rs: ...here.
+	* rust/compile/issue-3965-2.rs: Move to...
+	* rust/compile/issues/3965-2.rs: ...here.
+	* rust/compile/issue-3966.rs: Move to...
+	* rust/compile/issues/3966.rs: ...here.
+	* rust/compile/issue-3969.rs: Move to...
+	* rust/compile/issues/3969.rs: ...here.
+	* rust/compile/issue-3971.rs: Move to...
+	* rust/compile/issues/3971.rs: ...here.
+	* rust/compile/issue-3972.rs: Move to...
+	* rust/compile/issues/3972.rs: ...here.
+	* rust/compile/issue-3974.rs: Move to...
+	* rust/compile/issues/3974.rs: ...here.
+	* rust/compile/issue-3977.rs: Move to...
+	* rust/compile/issues/3977.rs: ...here.
+	* rust/compile/issue-3978.rs: Move to...
+	* rust/compile/issues/3978.rs: ...here.
+	* rust/compile/issue-4006.rs: Move to...
+	* rust/compile/issues/4006.rs: ...here.
+	* rust/compile/issue-402.rs: Move to...
+	* rust/compile/issues/402.rs: ...here.
+	* rust/compile/issue-407-2.rs: Move to...
+	* rust/compile/issues/407-2.rs: ...here.
+	* rust/compile/issue-407.rs: Move to...
+	* rust/compile/issues/407.rs: ...here.
+	* rust/compile/issue-4090-1.rs: Move to...
+	* rust/compile/issues/4090-1.rs: ...here.
+	* rust/compile/issue-4090-2.rs: Move to...
+	* rust/compile/issues/4090-2.rs: ...here.
+	* rust/compile/issue-4116.rs: Move to...
+	* rust/compile/issues/4116.rs: ...here.
+	* rust/compile/issue-4139.rs: Move to...
+	* rust/compile/issues/4139.rs: ...here.
+	* rust/compile/issue-4140-1.rs: Move to...
+	* rust/compile/issues/4140-1.rs: ...here.
+	* rust/compile/issue-4140-2.rs: Move to...
+	* rust/compile/issues/4140-2.rs: ...here.
+	* rust/compile/issue-4145.rs: Move to...
+	* rust/compile/issues/4145.rs: ...here.
+	* rust/compile/issue-4146.rs: Move to...
+	* rust/compile/issues/4146.rs: ...here.
+	* rust/compile/issue-4148.rs: Move to...
+	* rust/compile/issues/4148.rs: ...here.
+	* rust/compile/issue-4155.rs: Move to...
+	* rust/compile/issues/4155.rs: ...here.
+	* rust/compile/issue-4157-1.rs: Move to...
+	* rust/compile/issues/4157-1.rs: ...here.
+	* rust/compile/issue-4157-2.rs: Move to...
+	* rust/compile/issues/4157-2.rs: ...here.
+	* rust/compile/issue-4158.rs: Move to...
+	* rust/compile/issues/4158.rs: ...here.
+	* rust/compile/issue-4159.rs: Move to...
+	* rust/compile/issues/4159.rs: ...here.
+	* rust/compile/issue-4162.rs: Move to...
+	* rust/compile/issues/4162.rs: ...here.
+	* rust/compile/issue-4163-2.rs: Move to...
+	* rust/compile/issues/4163-2.rs: ...here.
+	* rust/compile/issue-4163.rs: Move to...
+	* rust/compile/issues/4163.rs: ...here.
+	* rust/compile/issue-4165.rs: Move to...
+	* rust/compile/issues/4165.rs: ...here.
+	* rust/compile/issue-4166.rs: Move to...
+	* rust/compile/issues/4166.rs: ...here.
+	* rust/compile/issue-4167.rs: Move to...
+	* rust/compile/issues/4167.rs: ...here.
+	* rust/compile/issue-4168.rs: Move to...
+	* rust/compile/issues/4168.rs: ...here.
+	* rust/compile/issue-4173-1.rs: Move to...
+	* rust/compile/issues/4173-1.rs: ...here.
+	* rust/compile/issue-4173-2.rs: Move to...
+	* rust/compile/issues/4173-2.rs: ...here.
+	* rust/compile/issue-4173-3.rs: Move to...
+	* rust/compile/issues/4173-3.rs: ...here.
+	* rust/compile/issue-4188.rs: Move to...
+	* rust/compile/issues/4188.rs: ...here.
+	* rust/compile/issue-4212.rs: Move to...
+	* rust/compile/issues/4212.rs: ...here.
+	* rust/compile/issue-4213.rs: Move to...
+	* rust/compile/issues/4213.rs: ...here.
+	* rust/compile/issue-4219.rs: Move to...
+	* rust/compile/issues/4219.rs: ...here.
+	* rust/compile/issue-4222.rs: Move to...
+	* rust/compile/issues/4222.rs: ...here.
+	* rust/compile/issue-4225.rs: Move to...
+	* rust/compile/issues/4225.rs: ...here.
+	* rust/compile/issue-4226.rs: Move to...
+	* rust/compile/issues/4226.rs: ...here.
+	* rust/compile/issue-4231.rs: Move to...
+	* rust/compile/issues/4231.rs: ...here.
+	* rust/compile/issue-4232.rs: Move to...
+	* rust/compile/issues/4232.rs: ...here.
+	* rust/compile/issue-4234.rs: Move to...
+	* rust/compile/issues/4234.rs: ...here.
+	* rust/compile/issue-4235.rs: Move to...
+	* rust/compile/issues/4235.rs: ...here.
+	* rust/compile/issue-4242.rs: Move to...
+	* rust/compile/issues/4242.rs: ...here.
+	* rust/compile/issue-4245.rs: Move to...
+	* rust/compile/issues/4245.rs: ...here.
+	* rust/compile/issue-4260_0.rs: Move to...
+	* rust/compile/issues/4260_0.rs: ...here.
+	* rust/compile/issue-4261.rs: Move to...
+	* rust/compile/issues/4261.rs: ...here.
+	* rust/compile/issue-4262.rs: Move to...
+	* rust/compile/issues/4262.rs: ...here.
+	* rust/compile/issue-4267.rs: Move to...
+	* rust/compile/issues/4267.rs: ...here.
+	* rust/compile/issue-4293.rs: Move to...
+	* rust/compile/issues/4293.rs: ...here.
+	* rust/compile/issue-4301.rs: Move to...
+	* rust/compile/issues/4301.rs: ...here.
+	* rust/compile/issue-4302.rs: Move to...
+	* rust/compile/issues/4302.rs: ...here.
+	* rust/compile/issue-4375-ice-regression.rs: Move to...
+	* rust/compile/issues/4375-ice-regression.rs: ...here.
+	* rust/compile/issue-4375-multiple-errors.rs: Move to...
+	* rust/compile/issues/4375-multiple-errors.rs: ...here.
+	* rust/compile/issue-4375-tuple-pattern.rs: Move to...
+	* rust/compile/issues/4375-tuple-pattern.rs: ...here.
+	* rust/compile/issue-4387.rs: Move to...
+	* rust/compile/issues/4387.rs: ...here.
+	* rust/compile/issue-4388.rs: Move to...
+	* rust/compile/issues/4388.rs: ...here.
+	* rust/compile/issue-4402.rs: Move to...
+	* rust/compile/issues/4402.rs: ...here.
+	* rust/compile/issue-4410.rs: Move to...
+	* rust/compile/issues/4410.rs: ...here.
+	* rust/compile/issue-4411.rs: Move to...
+	* rust/compile/issues/4411.rs: ...here.
+	* rust/compile/issue-4412.rs: Move to...
+	* rust/compile/issues/4412.rs: ...here.
+	* rust/compile/issue-4413.rs: Move to...
+	* rust/compile/issues/4413.rs: ...here.
+	* rust/compile/issue-4414.rs: Move to...
+	* rust/compile/issues/4414.rs: ...here.
+	* rust/compile/issue-4433.rs: Move to...
+	* rust/compile/issues/4433.rs: ...here.
+	* rust/compile/issue-4471-1.rs: Move to...
+	* rust/compile/issues/4471-1.rs: ...here.
+	* rust/compile/issue-4471-2.rs: Move to...
+	* rust/compile/issues/4471-2.rs: ...here.
+	* rust/compile/issue-4476.rs: Move to...
+	* rust/compile/issues/4476.rs: ...here.
+	* rust/compile/issue-4481.rs: Move to...
+	* rust/compile/issues/4481.rs: ...here.
+	* rust/compile/issue-4486-1.rs: Move to...
+	* rust/compile/issues/4486-1.rs: ...here.
+	* rust/compile/issue-4486-2.rs: Move to...
+	* rust/compile/issues/4486-2.rs: ...here.
+	* rust/compile/issue-4517.rs: Move to...
+	* rust/compile/issues/4517.rs: ...here.
+	* rust/compile/issue-4538.rs: Move to...
+	* rust/compile/issues/4538.rs: ...here.
+	* rust/compile/issue-4563.rs: Move to...
+	* rust/compile/issues/4563.rs: ...here.
+	* rust/compile/issue-4592.rs: Move to...
+	* rust/compile/issues/4592.rs: ...here.
+	* rust/compile/issue-4617.rs: Move to...
+	* rust/compile/issues/4617.rs: ...here.
+	* rust/compile/issue-4631.rs: Move to...
+	* rust/compile/issues/4631.rs: ...here.
+	* rust/compile/issue-4674.rs: Move to...
+	* rust/compile/issues/4674.rs: ...here.
+	* rust/compile/issue-4678.rs: Move to...
+	* rust/compile/issues/4678.rs: ...here.
+	* rust/compile/issue-4689-1.rs: Move to...
+	* rust/compile/issues/4689-1.rs: ...here.
+	* rust/compile/issue-4689-2.rs: Move to...
+	* rust/compile/issues/4689-2.rs: ...here.
+	* rust/compile/issue-4735.rs: Move to...
+	* rust/compile/issues/4735.rs: ...here.
+	* rust/compile/issue-4740.rs: Move to...
+	* rust/compile/issues/4740.rs: ...here.
+	* rust/compile/issue-4747.rs: Move to...
+	* rust/compile/issues/4747.rs: ...here.
+	* rust/compile/issue-4794.rs: Move to...
+	* rust/compile/issues/4794.rs: ...here.
+	* rust/compile/issue-4805.rs: Move to...
+	* rust/compile/issues/4805.rs: ...here.
+	* rust/compile/issue-4812.rs: Move to...
+	* rust/compile/issues/4812.rs: ...here.
+	* rust/compile/issue-4822.rs: Move to...
+	* rust/compile/issues/4822.rs: ...here.
+	* rust/compile/issue-4823.rs: Move to...
+	* rust/compile/issues/4823.rs: ...here.
+	* rust/compile/issue-4828.rs: Move to...
+	* rust/compile/issues/4828.rs: ...here.
+	* rust/compile/issue-4829-1.rs: Move to...
+	* rust/compile/issues/4829-1.rs: ...here.
+	* rust/compile/issue-4829-2.rs: Move to...
+	* rust/compile/issues/4829-2.rs: ...here.
+	* rust/compile/issue-4851.rs: Move to...
+	* rust/compile/issues/4851.rs: ...here.
+	* rust/compile/issue-4853.rs: Move to...
+	* rust/compile/issues/4853.rs: ...here.
+	* rust/compile/issue-4855.rs: Move to...
+	* rust/compile/issues/4855.rs: ...here.
+	* rust/compile/issue-4858.rs: Move to...
+	* rust/compile/issues/4858.rs: ...here.
+	* rust/compile/issue-4859.rs: Move to...
+	* rust/compile/issues/4859.rs: ...here.
+	* rust/compile/issue-4860.rs: Move to...
+	* rust/compile/issues/4860.rs: ...here.
+	* rust/compile/issue-4861.rs: Move to...
+	* rust/compile/issues/4861.rs: ...here.
+	* rust/compile/issue-4862.rs: Move to...
+	* rust/compile/issues/4862.rs: ...here.
+	* rust/compile/issue-4863.rs: Move to...
+	* rust/compile/issues/4863.rs: ...here.
+	* rust/compile/issue-4864.rs: Move to...
+	* rust/compile/issues/4864.rs: ...here.
+	* rust/compile/issue-4867.rs: Move to...
+	* rust/compile/issues/4867.rs: ...here.
+	* rust/compile/issue-4879.rs: Move to...
+	* rust/compile/issues/4879.rs: ...here.
+	* rust/compile/issue-557.rs: Move to...
+	* rust/compile/issues/557.rs: ...here.
+	* rust/compile/issue-635-1.rs: Move to...
+	* rust/compile/issues/635-1.rs: ...here.
+	* rust/compile/issue-635-2.rs: Move to...
+	* rust/compile/issues/635-2.rs: ...here.
+	* rust/compile/issue-850.rs: Move to...
+	* rust/compile/issues/850.rs: ...here.
+	* rust/compile/issue-852.rs: Move to...
+	* rust/compile/issues/852.rs: ...here.
+	* rust/compile/issue-855.rs: Move to...
+	* rust/compile/issues/855.rs: ...here.
+	* rust/compile/issue-867.rs: Move to...
+	* rust/compile/issues/867.rs: ...here.
+	* rust/compile/issue-925.rs: Move to...
+	* rust/compile/issues/925.rs: ...here.
+	* rust/compile/empty_file: Move to...
+	* rust/compile/issues/empty_file: ...here.
+	* rust/compile/issue_4402_foo.rs: Move to...
+	* rust/compile/issues/issue_4402_foo.rs: ...here.
+	* rust/compile/issues/issues.exp: Copy DG execution from parent directory.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4879.rs: New test.
+
+2026-09-16  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/issue-4740.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4867.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4864.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/execute/torture/issue-4866.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4862.rs: New test.
+	* rust/compile/issue-4863.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4861.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4858.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4859.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4860.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4855.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4853.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4851.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/execute/torture/deferred-add-partial-ord.rs: New test.
+
+2026-09-16  Pierre-Emmanuel Patry  <pierre.emmanuel.patry@opensrcsec.com>
+
+	* rust/compile/issue-4735.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/associated-type-bound.rs: New test.
+	* rust/compile/issue-1726-1.rs: New test.
+	* rust/compile/issue-1726-2.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4829-1.rs: New test.
+	* rust/compile/issue-4829-2.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4828.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4822.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4823.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/extern_type_item_resolve.rs: it works
+	* rust/compile/extern-type-unsized.rs: New test.
+	* rust/compile/extern-type.rs: New test.
+
+2026-09-16  Lishin  <lishin1008@gmail.com>
+
+	* rust/compile/drop-conditional-product-move.rs: New test.
+
+2026-09-16  Lishin  <lishin1008@gmail.com>
+
+	* rust/execute/drop-conditional-move.rs: New test.
+
+2026-09-16  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/llvm_builtins.rs: Removed 64-bit functions, ensure main calls all llvm
+	built-ins, add dg-final directives to check the generated tree dump, ensure the test
+	only gets compiled on x86 targets.
+	* rust/compile/llvm_builtins_64_bit.rs: New test derived from llvm_builtins.rs, but
+	for 64-bit functions.
+
+2026-09-16  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/llvm_builtins.rs: Enable addcarryx cases, add TODO comment for vcvtph2ps &
+	vcvtps2ph cases.
+
+2026-09-16  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/llvm_builtins.rs: New file.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4166.rs:
+
+2026-09-16  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/let-structpattern.rs: New file.
+	* rust/execute/torture/let-structpattern.rs: New file.
+
+2026-09-16  Lishin  <lishin1008@gmail.com>
+
+	* rust/borrowck/drop_analysis_conditional_move.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4812.rs: New test.
+
+2026-09-16  Enes Cevik  <enes@nsvke.com>
+
+	* rust/alloc/alloc.exp: New test.
+	* rust/alloc/alloc/src/alloc.rs: New test.
+	* rust/alloc/alloc/src/alloc/tests.rs: New test.
+	* rust/alloc/alloc/src/borrow.rs: New test.
+	* rust/alloc/alloc/src/boxed.rs: New test.
+	* rust/alloc/alloc/src/collections/binary_heap.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/append.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/borrow.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/borrow/tests.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/map.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/map/entry.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/map/tests.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/mem.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/merge_iter.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/mod.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/navigate.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/node.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/node/tests.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/remove.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/search.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/set.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/set/tests.rs: New test.
+	* rust/alloc/alloc/src/collections/btree/split.rs: New test.
+	* rust/alloc/alloc/src/collections/linked_list.rs: New test.
+	* rust/alloc/alloc/src/collections/linked_list/tests.rs: New test.
+	* rust/alloc/alloc/src/collections/mod.rs: New test.
+	* rust/alloc/alloc/src/collections/vec_deque.rs: New test.
+	* rust/alloc/alloc/src/collections/vec_deque/drain.rs: New test.
+	* rust/alloc/alloc/src/collections/vec_deque/tests.rs: New test.
+	* rust/alloc/alloc/src/fmt.rs: New test.
+	* rust/alloc/alloc/src/lib.rs: New test.
+	* rust/alloc/alloc/src/macros.rs: New test.
+	* rust/alloc/alloc/src/prelude/mod.rs: New test.
+	* rust/alloc/alloc/src/prelude/v1.rs: New test.
+	* rust/alloc/alloc/src/raw_vec.rs: New test.
+	* rust/alloc/alloc/src/raw_vec/tests.rs: New test.
+	* rust/alloc/alloc/src/rc.rs: New test.
+	* rust/alloc/alloc/src/rc/tests.rs: New test.
+	* rust/alloc/alloc/src/slice.rs: New test.
+	* rust/alloc/alloc/src/str.rs: New test.
+	* rust/alloc/alloc/src/string.rs: New test.
+	* rust/alloc/alloc/src/sync.rs: New test.
+	* rust/alloc/alloc/src/sync/tests.rs: New test.
+	* rust/alloc/alloc/src/task.rs: New test.
+	* rust/alloc/alloc/src/tests.rs: New test.
+	* rust/alloc/alloc/src/vec.rs: New test.
+	* rust/alloc/core.rs: New test.
+	* rust/alloc/prelude.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4805.rs: New test.
+
+2026-09-16  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/execute/torture/issue-4804.rs: New test.
+
+2026-09-16  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/mod_fn_conflict.rs: New test.
+
+2026-09-16  Utkarsh Bahuguna  <utkarshbahuguna10@gmail.com>
+
+	* rust/compile/empty_path2.rs: New test.
+	* rust/compile/empty_path3.rs: New test.
+
+2026-09-16  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/for-loop3.rs: New test.
+
+2026-09-16  Richard Biener  <rguenther@suse.de>
+
+	* gcc.dg/vect/vect-bitint-1.c: New testcase.
+
+2026-09-16  Stefan Schulze Frielinghaus  <stefansf@gcc.gnu.org>
+
+	* gcc.dg/asm-hard-reg-6.c: This patch would result in only one
+	reload for alternative 1 in test_reg_reg which changes costing
+	which in turn leads to choosing alternative 1 for which we
+	didn't test.  Restore the old behaviour by choosing for GPR3 r4
+	which results in two reloads in each alternative.
+	* gcc.target/s390/asm-hard-reg-1.c: Similarly here we also
+	compute a more precise conflicting register set which leads to
+	choosing a different insn alternative for test_out_2.
+
+2026-09-15  Takayuki 'January June' Suwa  <jjsuwa_sys3175@yahoo.co.jp>
+
+	* gcc.target/xtensa/MOVSP.c: New test.
+
+2026-09-15  Takayuki 'January June' Suwa  <jjsuwa_sys3175@yahoo.co.jp>
+
+	* gcc.target/xtensa/regA0-allocatability.c: New test.
+
+2026-09-15  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127390
+	* gcc.dg/vect/vect-pr127390.c: New testcase.
+
+2026-09-15  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/126760
+	PR tree-optimization/127391
+	* gcc.dg/vect/vect-pr126760.c: New testcase.
+	* gcc.dg/vect/vect-pr127391.c: Likewise.
+
+2026-09-15  Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/127352
+	* gcc.target/i386/pr127352.c: New test.
+
+2026-09-15  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/113703
+	* gcc.dg/tree-ssa/ivopts-lt.c: Use unsigned int counters,
+	restrict to lp64.
+	* gcc.dg/tree-ssa/ivopts-lt-2.c: Restrict to lp64.
+	* gcc.dg/torture/pr113703-1.c: New test.
+	* gcc.dg/torture/pr113703-2.c: New test.
+
+2026-09-15  Haochen Jiang  <haochen.jiang@intel.com>
+
+	PR target/127264
+	* gcc.target/i386/pr127264.c: New test.
+
+2026-09-15  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR middle-end/127185
+	* c-c++-common/strub-mem-notrap.c: Tighten the load and store scans.
+	* c-c++-common/strub-mem-notrap-leave.c: New test.
+
+2026-09-15  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR middle-end/127185
+	* g++.dg/opt/mem-notrap-load-asm.C: New test.
+	* gcc.target/i386/mem-notrap-mask-load.c: New test.
+
+2026-09-15  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR middle-end/127185
+	* g++.dg/opt/mem-notrap-load-builtin.C: New test.
+
+2026-09-15  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR middle-end/127185
+	* g++.dg/eh/noncall-store-2.C: New test.
+	* g++.dg/opt/mem-notrap-store-asm.C: New test.
+
+2026-09-15  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	PR middle-end/127184
+	* g++.dg/eh/noncall-store-call.C: New test.
+
+2026-09-15  Naveen  <naveen.siddegowda@oss.qualcomm.com>
+
+	* gcc.target/aarch64/sadv8qi-dotprod.c: New test.
+
+2026-09-15  Hongyu Wang  <hongyu.wang@intel.com>
+
+	PR target/127177
+	* gcc.target/i386/pr127177-1.c: New test.
+	* gcc.target/i386/pr127177-2.c: Likewise.
+	* gcc.target/i386/pr127177-3.c: Likewise.
+	* gcc.target/i386/pr127177-4.c: Likewise.
+	* gcc.target/i386/pr127177-5.c: Likewise.
+
+2026-09-14  Robert Dubner  <rdubner@symas.com>
+
+	* cobol.dg/group2/CURRENCY_SIGN_WITH_PICTURE_SYMBOL.cob: Use @ not U.
+	* cobol.dg/group2/floating-point_ADD_FORMAT_1.cob: Test NEAREST-AWAY-FROM-ZERO.
+	* cobol.dg/group2/floating-point_ADD_FORMAT_1.out: Test DISPLAY.
+
+2026-09-14  Joshua Berne  <berne@notadragon.com>
+
+	PR c++/127282
+	* g++.dg/cpp23/attr-assume10.C: Add a case with a nested assumption.
+
+2026-09-14  Jakub Jelinek  <jakub@redhat.com>
+
+	* g++.dg/cpp26/within-lifetime1.C: Fix up C++26 paper number and name.
+	* g++.dg/cpp26/within-lifetime2.C: Likewise.
+	* g++.dg/cpp26/within-lifetime3.C: Likewise.
+	* g++.dg/cpp26/within-lifetime4.C: Likewise.
+	* g++.dg/cpp26/within-lifetime5.C: Likewise.
+	* g++.dg/cpp26/within-lifetime6.C: Likewise.
+	* g++.dg/cpp26/within-lifetime7.C: Likewise.
+	* g++.dg/cpp26/within-lifetime8.C: Likewise.
+	* g++.dg/cpp26/within-lifetime9.C: Likewise.
+	* g++.dg/cpp26/within-lifetime10.C: New test.
+	* g++.dg/cpp26/within-lifetime11.C: New test.
+	* g++.dg/cpp26/within-lifetime12.C: New test.
+
+2026-09-14  Marek Polacek  <polacek@redhat.com>
+
+	PR c++/127349
+	* g++.dg/reflect/ns7.C: New test.
+
+2026-09-14  Marek Polacek  <polacek@redhat.com>
+
+	PR c++/126970
+	* g++.dg/reflect/cwg3153-2.C: New test.
+
+2026-09-14  Dominic P  <gcc@gcc.dp11.uk>
+
+	PR tree-optimization/127379
+	* gcc.dg/torture/pr127379.c: New test.
+
+2026-09-14  Wilco Dijkstra  <wilco.dijkstra@arm.com>
+
+	* gcc.target/aarch64/sve/zeroing_mov_z.c: New test.
+
+2026-09-14  Jakub Jelinek  <jakub@redhat.com>
+
+	PR middle-end/127336
+	* gcc.dg/pr127336.c: New test.
+
+2026-09-14  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/arm/short-it-ifcvt-2.c: Skip M-profile targets.
+	Match complete conditional branch mnemonics and allow lt and ge.
+
+2026-09-14  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_u_sub_swapped-1.c: New test.
+
+2026-09-14  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_u_sub_minmax-1.c: New test.
+	* gcc.target/aarch64/sat_u_sub_minmax-2.c: New test.
+	* gcc.target/aarch64/sat_u_sub_minmax-3.c: New test.
+
+2026-09-14  Claudio Bantaloukas  <claudio.bantaloukas@arm.com>
+
+	* gcc.target/aarch64/pragma_cpp_predefs_6.c: Add tests checking that the
+	sme-tmop prefef is off by default, and checks for feature dependencies.
+	* gcc.target/aarch64/sme2/acle-asm/test_sme2_acle.h: (TEST_ZA_TMOP) Add
+	testing macro.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za16_bf16_bf16.c:
+	New test.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za16_f16_f16.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za16_mf8_mf8.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_bf16_bf16.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_f16_f16.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_f32_f32.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_mf8_mf8.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_s8_s8.c: Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_s8_u8.c: Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_s16_s16.c:
+	Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_u8_s8.c: Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_u8_u8.c: Likewise.
+	* gcc.target/aarch64/sme2/acle-asm/tmopa_lane_za32_u16_u16.c:
+	Likewise.
+	* gcc.target/aarch64/sve/acle/general-c/ternary_za_uint_dual_single_1.c:
+	Likewise.
+	* lib/target-supports.exp: Add check_effective_target support for
+	sme-tmop.
+
+2026-09-14  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127377
+	* gcc.dg/torture/pr127377.c: New testcase.
+
+2026-09-14  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127363
+	* gcc.dg/vect/vect-pr127363.c: New testcase.
+
+2026-09-14  Artemiy Volkov  <artemiy.volkov@arm.com>
+
+	PR target/126983
+	* gcc.target/aarch64/vec-init-23-nofp16.c: New test.
+
+2026-09-14  Rohith Kapelli  <kapellirohith@gmail.com>
+
+	PR ipa/123227
+	* gcc.dg/ipa/pr123227.c: New test.
+	* g++.dg/ipa/pr123227.C: New test.
+	* gcc.dg/lto/pr123227_0.c: New test.
+	* gcc.dg/lto/pr123227_1.c: New test.
+	* g++.dg/lto/pr123227_0.C: New test.
+	* g++.dg/lto/pr123227_1.C: New test.
+
+2026-09-13  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.dg/torture/minmax-swar-1.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-1.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-2.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-3.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-4.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-5.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-6.c: New test.
+	* gcc.dg/tree-ssa/minmax-swar-7.c: New test.
+
+2026-09-13  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.dg/torture/minmax-negate-1.c: New test.
+	* gcc.dg/tree-ssa/minmax-negate-1.c: New test.
+	* gcc.dg/tree-ssa/minmax-negate-2.c: New test.
+	* gcc.dg/tree-ssa/minmax-negate-3.c: New test.
+
+2026-09-13  Jeff Law  <jeffreyalaw@gmail.com>
+	    Sun Yuechi  <sunyuechi@iscas.ac.cn
+
+	* gcc.target/riscv/bclr-lowest-set-bit-1.c: Update expected output.
+	* gcc.target/riscv/bclr-lowest-set-bit-2.c: New test.
+
+2026-09-13  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.dg/torture/abs-gt-1.c: New test.
+	* gcc.dg/torture/ior-range-test-1.c: New test.
+	* gcc.dg/tree-ssa/ior-range-test-1.c: New test.
+	* gcc.dg/tree-ssa/ior-range-test-2.c: New test.
+	* gcc.dg/tree-ssa/ior-range-test-3.c: New test.
+
+2026-09-13  Michiel Derhaeg  <michiel@derhaeg.be>
+
+	* gcc.target/riscv/crc-builtin-zbc32.c: Add reversed crc32 tests.
+
+2026-09-13  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR fortran/103474
+	* gfortran.dg/coarray_52.f90: New test.
+	* gfortran.dg/coarray/cobounds_subobject_1.f90: New test.
+
+2026-09-13  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR fortran/126781
+	* gfortran.dg/coarray_this_image_3.f90: Update expected errors.
+	* gfortran.dg/coarray/num_images_team_1.f90: New test.
+	* gfortran.dg/coarray/num_images_team_2.f90: New test.
+	* gfortran.dg/coarray_team_kw_1.f90: New test.
+	* gfortran.dg/coarray_team_std_1.f90: New test.
+
+2026-09-13  Iain Sandoe  <iain@sandoe.co.uk>
+
+	PR c++/126811
+	* g++.dg/cpp0x/nsdmi-template27.C: New test.
+
+2026-09-13  Iain Sandoe  <iain@sandoe.co.uk>
+
+	* gcc.c-torture/compile/pr106433.c: Require avx512 support from the
+	assembler.
+	* gcc.c-torture/compile/pr113322-1.c: Likewise.
+	* gcc.c-torture/compile/pr116348.c: Likewise.
+	* gcc.c-torture/compile/pr97576.c: Likewise.
+
+2026-09-13  Marek Polacek  <polacek@redhat.com>
+
+	PR c++/125820
+	PR c++/124249
+	PR c++/124414
+	* g++.dg/cpp2a/concepts-uneval3.C: Add a dg-error.
+	* g++.dg/gcov/gcov-24.C: Adjust expected output.
+	* g++.dg/reflect/bit_cast.C: Remove dg-error.  Extend.
+	* g++.dg/reflect/crash12.C: Remove dg-error.
+	* g++.dg/reflect/crash18.C: Likewise.
+	* g++.dg/reflect/diag3.C: Adjust expected output.
+	* g++.dg/reflect/expr11.C: Likewise.
+	* g++.dg/reflect/expr12.C: Likewise.
+	* g++.dg/reflect/init10.C: Likewise.
+	* g++.dg/reflect/init11.C: Likewise.
+	* g++.dg/reflect/init12.C: Remove dg-error.
+	* g++.dg/reflect/init16.C: Adjust expected output.
+	* g++.dg/reflect/init19.C: Remove dg-error.
+	* g++.dg/reflect/init4.C: Add an XFAIL.
+	* g++.dg/reflect/init5.C: Remove dg-error.
+	* g++.dg/reflect/init6.C: Adjust expected output.
+	* g++.dg/reflect/init7.C: Likewise.
+	* g++.dg/reflect/init9.C: Likewise.
+	* g++.dg/reflect/override1.C: Likewise.
+	* g++.dg/reflect/p2996-15.C: Remove dg-error.
+	* g++.dg/reflect/parm3.C: Adjust expected output.
+	* g++.dg/reflect/parm4.C: Likewise.
+	* g++.dg/reflect/pr124012.C: Remove dg-error.
+	* g++.dg/reflect/type12.C: Likewise.
+	* g++.dg/reflect/type2.C: Adjust expected output.
+	* g++.dg/reflect/bit_cast2.C: New test.
+	* g++.dg/reflect/expr19.C: New test.
+	* g++.dg/reflect/null7.C: New test.
+	* g++.dg/reflect/type_trait19.C: New test.
+	* g++.dg/reflect/typeinfo1.C: New test.
+	* g++.dg/reflect/value1.C: New test.
+	* g++.dg/reflect/value2.C: New test.
+	* g++.dg/reflect/value3.C: New test.
+	* g++.dg/reflect/value4.C: New test.
+	* g++.dg/reflect/value5.C: New test.
+	* g++.dg/reflect/value6.C: New test.
+	* g++.dg/reflect/value7.C: New test.
+	* g++.dg/reflect/value8.C: New test.
+	* g++.dg/reflect/vector2.C: New test.
+
+2026-09-13  Iain Sandoe  <iain@sandoe.co.uk>
+
+	* gcc.target/i386/avx512bw-pr103750-2.c: Add -mtune=generic.
+	* gcc.target/i386/avx512bw-pr88465.c: Likewise.
+	* gcc.target/i386/avx512dq-pr88465.c: Likewise.
+	* gcc.target/i386/avx512f-pr103750-2.c: Likewise.
+	* gcc.target/i386/avx512f-pr88465.c: Likewise.
+	* gcc.target/i386/avx512fp16-pr103750-2.c: Likewise.
+	* gcc.target/i386/sse2-stv-2.c: Likewise.
+	* gcc.target/i386/sse2-stv-3.c: Likewise.
+	* gcc.target/i386/sse2-stv-4.c: Likewise.
+	* gcc.target/i386/sse2-stv-5.c: Likewise.
+	* gcc.target/i386/sse2-stv-6.c: Likewise.
+	* gcc.target/i386/sse2-stv-7.c: Likewise.
+
+2026-09-13  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/127358
+	* gcc.dg/torture/pr127358-1.c: New test.
+
+2026-09-13  Xi Ruoyao  <xry111@xry111.site>
+
+	PR target/127153
+	* c-c++-common/pr127153.c: New test.
+
+2026-09-12  Jakub Jelinek  <jakub@redhat.com>
+
+	P3598R0
+	PR c++/125840
+	* g++.dg/reflect/contract1.C: New test.
+	* g++.dg/reflect/contract2.C: New test.
+	* g++.dg/reflect/contract3.C: New test.
+	* g++.dg/reflect/contract4.C: New test.
+	* g++.dg/reflect/contract5.C: New test.
+	* g++.dg/reflect/reflect_object2.C (g): Add test for setting of
+	splice expr of an object reflection.
+
+2026-09-12  Jakub Jelinek  <jakub@redhat.com>
+
+	* g++.dg/cpp0x/constexpr-static-cast1.C: New test.
+	* g++.dg/cpp0x/constexpr-static-cast2.C: New test.
+	* g++.dg/cpp1y/constexpr-static-cast1.C: New test.
+	* g++.dg/cpp1y/constexpr-static-cast2.C: New test.
+	* g++.dg/cpp1y/constexpr-static-cast3.C: New test.
+	* g++.dg/cpp1y/constexpr-static-cast4.C: New test.
+
+2026-09-12  Pan Li  <pan2.li@intel.com>
+
+	PR target/127269
+	* gcc.target/riscv/rvv/base/pr127269-1.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-2.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-3.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-4.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-5.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-6.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-7.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-8.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-9.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-10.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-11.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-12.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-13.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-14.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-15.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-16.c: New test.
+	* gcc.target/riscv/rvv/base/pr127269-17.c: New test.
+
+2026-09-11  Jeff Law  <jeffrey.law@oss.qualcomm.com>
+
+	PR target/127306
+	* gcc.target/riscv/pr127306.c: New test.
+
+2026-09-11  Dominic P  <gcc@gcc.dp11.uk>
+
+	* gcc.dg/vect/vect-reduc-sad-10.c: New test.
+	* gcc.target/aarch64/sad-halfpel-1.c: New test.
+	* gcc.target/aarch64/sad-halfpel-2.c: New file.
+
+2026-09-11  Vladimir N. Makarov  <vmakarov@redhat.com>
+
+	PR rtl-optimization/127244
+	* gcc.target/i386/pr127244.c: New
+
+2026-09-11  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	* gm2/iso/run/pass/testclock2.mod: Remove ability to
+	change the system clock.
+
+2026-09-11  Robin Dapp  <robin.dapp@oss.qualcomm.com>
+
+	* g++.target/riscv/rvv/autovec/pr127323.C: New test.
+
+2026-09-11  Andrew MacLeod  <amacleod@redhat.com>
+
+	* gcc.dg/tree-ssa/evrp-trans3.c: New.
+
+2026-09-11  Robin Dapp  <robin.dapp@oss.qualcomm.com>
+
+	* gcc.target/riscv/setmem-nolibcall.c: New test.
+	* gcc.target/riscv/setmem-scalar-32.c: New test.
+	* gcc.target/riscv/setmem-scalar-64.c: New test.
+	* gcc.target/riscv/setmem-scalar-run.c: New test.
+
+2026-09-11  Robin Dapp  <robin.dapp@oss.qualcomm.com>
+
+	* gcc.target/riscv/movmem-scalar-32.c: New test.
+	* gcc.target/riscv/movmem-scalar-64.c: New test.
+	* gcc.target/riscv/movmem-scalar-run.c: New test.
+
+2026-09-11  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* c-c++-common/strub-mem-notrap.c: New test.
+	* g++.dg/tree-ssa/cselim-ref-1.C: New test.
+	* g++.dg/tree-ssa/cselim-ref-2.C: New test.
+	* g++.dg/tree-ssa/lim-ref-1.C: New test.
+	* g++.dg/tree-ssa/lim-ref-2.C: New test.
+	* g++.dg/tree-ssa/lim-ref-3.C: New test.
+	* g++.dg/tree-ssa/lim-ref-4.C: New test.
+	* g++.dg/tree-ssa/lim-this-1.C: New test.
+	* g++.dg/tree-ssa/noncall-store-builtin.C: New test.
+
+2026-09-11  Manjunath Matti  <mmatti@linux.ibm.com>
+	    Jakub Jelinek  <jakub@redhat.com>
+
+	PR target/117584
+	* gcc.target/powerpc/bitint-abi-call.c: New test.
+	* gcc.target/powerpc/bitint-alignments-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-args-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-arith-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-bitint-to-ibm128.c: New test.
+	* gcc.target/powerpc/bitint-bitwise-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-compare-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-conversions-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-endian-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-ibm128-to-bitint.c: New test.
+	* gcc.target/powerpc/bitint-sizes-powerpc.c: New test.
+	* gcc.target/powerpc/bitint-struct-layout.c: New test.
+	* gcc.target/powerpc/bitint-varargs.c: New test.
+
+2026-09-11  Richard Biener  <rguenther@suse.de>
+
+	PR tree-optimization/127310
+	* gcc.dg/vect/vect-pr127310.c: New testcase.
+
+2026-09-11  Jakub Jelinek  <jakub@redhat.com>
+
+	* gcc.target/i386/vperm-v4sf-3.c: New test.
+	* gcc.target/i386/vperm-v4si-3.c: New test.
+
+2026-09-11  Jakub Jelinek  <jakub@redhat.com>
+
+	PR c++/127276
+	* g++.dg/reflect/pr127276.C: New test.
+
+2026-09-11  Richard Biener  <rguenther@suse.de>
+
+	* gcc.dg/gimplefe-61.c: New file.
+
+2026-09-11  Richard Biener  <rguenther@suse.de>
+
+	* gcc.dg/gimplefe-60.c: New testcase.
+
+2026-09-11  H.J. Lu  <hjl.tools@gmail.com>
+
+	PR target/127020
+	* gcc.target/i386/sse2-stv-3.c: Adjusted.
+	* gcc.target/i386/sse2-stv-8.c: New test.
+	* gcc.target/i386/sse2-stv-9.c: Likewise.
+
+2026-09-10  Andrea Pinski  <andrew.pinski@oss.qualcomm.com>
+
+	PR tree-optimization/127052
+	* gcc.dg/tree-ssa/cselim-6.c: New test.
+	* gcc.dg/tree-ssa/cselim-7.c: New test.
+
+2026-09-10  Jakub Jelinek  <jakub@redhat.com>
+
+	P3726R2
+	PR c++/125845
+	* g++.dg/cpp26/feat-cxx26.C: Adjust __cpp_trivial_union checking.
+	* g++.dg/cpp26/trivial-union3.C: New test.
+	* g++.dg/cpp26/trivial-union4.C: New test.
+	* g++.dg/cpp26/trivial-union5.C: New test.
+	* g++.dg/cpp26/trivial-union6.C: New test.
+	* g++.dg/cpp26/within-lifetime3.C: Remove #if 0 and #endif.
+	* g++.dg/cpp26/within-lifetime8.C: New test.
+	* g++.dg/cpp26/within-lifetime9.C: New test.
+	* g++.dg/cpp29/feat-cxx29.C: Adjust __cpp_trivial_union checking.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4794.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-1553.rs: New test.
+
+2026-09-10  Lishin  <lishin1008@gmail.com>
+
+	* rust/execute/drop-explicit-return.rs: Test parameter drops on explicit
+	return.
+	* rust/execute/drop-function-boundary-moves.rs: New test.
+	* rust/execute/drop-function-params.rs: Test multiple parameter drop
+	order.
+	* rust/execute/drop-if-else-local.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4678.rs: New test.
+
+2026-09-10  Lucas Ly Ba  <lucas.ly-ba@outlook.com>
+
+	* rust/compile/unused-unsafe_0.rs: New test.
+
+2026-09-10  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/unreachable.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4631.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4157-1.rs: New test.
+	* rust/compile/issue-4157-2.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-4173-1.rs: New test.
+	* rust/compile/issue-4173-2.rs: New test.
+	* rust/compile/issue-4173-3.rs: New test.
+
+2026-09-10  Philip Herron  <herron.philip@googlemail.com>
+
+	* rust/compile/issue-3585-1.rs: New test.
+	* rust/compile/issue-3585-2.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/execute/box-dispatch-from-dyn.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/execute/box-dispatch-1.rs: New test.
+	* rust/execute/box-dispatch-2.rs: New test.
+	* rust/execute/unsized-adt-size.rs: Format test.
+
+2026-09-10  Lucas Ly Ba  <lucas.ly-ba@outlook.com>
+
+	* rust/compile/break-with-label-and-loop_0.rs: New test.
+
+2026-09-10  Lucas Ly Ba  <hi@lucaslyba.com>
+
+	* rust/compile/repr-c-enums-larger-than-int_0.rs: New test.
+
+2026-09-10  Lishin  <lishin1008@gmail.com>
+
+	* rust/execute/drop-whole-local-move.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/execute/unsized-adt-nested-coercion.rs: New test.
+	* rust/execute/unsized-adt-size.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/compile/coercion2.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/compile/coercion.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/compile/unsize2.rs: New test.
+
+2026-09-10  Lishin  <lishin1008@gmail.com>
+
+	* rust/borrowck/drop_analysis_whole_move.rs: New test.
+
+2026-09-10  Utkarsh Bahuguna  <utkarshbahuguna10@gmail.com>
+
+	* rust/link/extern_crate_alias_0.rs: New test.
+	* rust/link/extern_crate_alias_1.rs: New test.
+	* rust/link/extern_crate_dup_0.rs: New test.
+	* rust/link/extern_crate_dup_1.rs: New test.
+	* rust/link/extern_crate_item_conflict_0.rs: New test.
+	* rust/link/extern_crate_item_conflict_1.rs: New test.
+
+2026-09-10  Lishin  <lishin1008@gmail.com>
+
+	* rust/execute/drop-unlabeled-break-continue.rs: New test.
+
+2026-09-10  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/slice_rest_pattern_2.rs: New test.
+
+2026-09-10  Yap Zhi Heng  <yapzhhg@gmail.com>
+
+	* rust/compile/repr_simd.rs: New file.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/compile/issue-4689-1.rs: New test.
+	* rust/compile/issue-4689-2.rs: New test.
+
+2026-09-10  Enes Cevik  <enes@nsvke.com>
+
+	* rust/compile/lang-pin-unpin.rs: New test.
+
+2026-09-10  Aiman Najjar  <aiman.najjar@hurranet.com>
+
+	* rust/compile/issue-4747.rs: New test.
+
+2026-09-10  Arthur Cohen  <arthur.cohen@embecosm.com>
+
+	* rust/compile/apit-in-inner-fn.rs: New test.
+
+2026-09-10  Arthur Cohen  <arthur.cohen@embecosm.com>
+
+	* rust/compile/va_list-lang-item.rs: New test.
+
+2026-09-10  Arthur Cohen  <arthur.cohen@embecosm.com>
+
+	* rust/compile/freeze-lang-item.rs: New test.
+
+2026-09-10  Arthur Cohen  <arthur.cohen@embecosm.com>
+
+	* rust/compile/tool-attribute1.rs: New test.
+
+2026-09-10  Arthur Cohen  <arthur.cohen@embecosm.com>
+
+	* rust/compile/derive-with-default-types.rs: New test.
+
+2026-09-10  Lucas Ly Ba  <lucas.ly-ba@outlook.com>
+
+	* rust/compile/double-negations_0.rs: New test.
+
+2026-09-10  Owen Avery  <powerboat9.gamer@gmail.com>
+
+	* rust/compile/doc_macro_2.rs: New test.
+
+2026-09-10  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_u_promoted-1.c: New test.
+	* gcc.target/aarch64/sat_u_promoted-2.c: New test.
+	* gcc.target/aarch64/sat_u_promoted-3.c: New test.
+	* g++.target/aarch64/sat_u_promoted-vector-1.C: New test.
+
+2026-09-10  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* algol68/execute/labeled-unit-1.a68: New test.
+	* algol68/execute/plusab-5.a68: Likewise.
+
+2026-09-10  Roger Sayle  <roger@nextmovesoftware.com>
+	    Hongtao Liu  <hongtao.liu@intel.com>
+
+	* gcc.target/i386/sse4_1-insertps-8.c: New test case.
+	* gcc.target/i386/sse4_1-insertps-9.c: Likewise.
+	* gcc.target/i386/vperm-v4sf-3-sse4.c: Likewise.
+	* gcc.target/i386/vperm-v4sf-3.c: Likewise.
+	* gcc.target/i386/vperm-v4si-3-sse4.c: Likewise.
+	* gcc.target/i386/vperm-v4si-3.c: Likewise.
+
+2026-09-10  Kyrylo Tkachov  <ktkachov@nvidia.com>
+
+	* gcc.target/aarch64/sat_u_add_not_cmp-1.c: New test.
+	* gcc.target/aarch64/sat_u_add_not_cmp-2.c: New test.
+
+2026-09-10  Uros Bizjak  <ubizjak@gmail.com>
+
+	* gcc.target/i386/vec-concatv2sf.c: New test.
+
+2026-09-10  Shivam Gupta  <shivam98.tkg@gmail.com>
+
+	PR tree-optimization/125734
+	* gcc.dg/tree-ssa/pr125734.c: New test.
+
 2026-09-09  Iain Sandoe  <iain@sandoe.co.uk>
 
 	* lib/target-supports.exp (natural_alignment_32) Remove

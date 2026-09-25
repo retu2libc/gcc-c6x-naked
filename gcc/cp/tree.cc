@@ -579,6 +579,7 @@ builtin_valid_in_constant_expr_p (const_tree decl)
 	  case CP_BUILT_IN_CURRENT_EXCEPTION:
 	  case CP_BUILT_IN_UNCAUGHT_EXCEPTIONS:
 	  case CP_BUILT_IN_IS_WITHIN_LIFETIME:
+	  case CP_BUILT_IN_START_LIFETIME:
 	    return true;
 	  default:
 	    break;
@@ -5173,6 +5174,16 @@ type_has_unique_obj_representations (const_tree t, bool explain/*=false*/)
       if (explain)
 	inform (loc, "%<std::nullptr_t%> has padding bits and no value bits");
       return false;
+
+    case LANG_TYPE:
+      if (REFLECTION_TYPE_P (t))
+	{
+	  if (explain)
+	    inform (loc, "%<std::meta::info%> has an unspecified object "
+		    "representation");
+	  return false;
+	}
+      gcc_fallthrough ();
 
     default:
       gcc_unreachable ();

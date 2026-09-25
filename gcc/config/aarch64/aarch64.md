@@ -2666,10 +2666,10 @@
   [(set (match_operand:GPI 0 "register_operand")
         (sign_extend:GPI (match_operand:SHORT 1 "nonimmediate_operand")))]
   ""
-  {@ [ cons: =0 , 1 ; attrs: type , arch ]
-     [ r        , r ; extend      , *    ] sxt<SHORT:extsize>\t%<GPI:w>0, %w1
-     [ r        , m ; load_4      , *    ] ldrs<SHORT:extsize>\t%<GPI:w>0, %1
-     [ r        , w ; neon_to_gp  , fp   ] smov\t%<GPI:w>0, %1.<SHORT:size>[0]
+  {@ [ cons: =0 , 1 ; attrs: type , arch      ]
+     [ r        , r ; extend      , *         ] sxt<SHORT:extsize>\t%<GPI:w>0, %w1
+     [ r        , m ; load_4      , *         ] ldrs<SHORT:extsize>\t%<GPI:w>0, %1
+     [ r        , w ; neon_to_gp  , base_simd ] smov\t%<GPI:w>0, %1.<SHORT:size>[0]
   }
 )
 
@@ -2677,11 +2677,11 @@
   [(set (match_operand:GPI 0 "register_operand")
         (zero_extend:GPI (match_operand:SHORT 1 "nonimmediate_operand")))]
   ""
-  {@ [ cons: =0 , 1 ; attrs: type , arch ]
-     [ r        , r ; logic_imm   , *    ] and\t%<GPI:w>0, %<GPI:w>1, <SHORT:short_mask>
-     [ r        , m ; load_4      , *    ] ldr<SHORT:size>\t%w0, %1
-     [ w        , m ; f_loads     , fp   ] ldr\t%<SHORT:size>0, %1
-     [ r        , w ; neon_to_gp  , fp   ] umov\t%w0, %1.<SHORT:size>[0]
+  {@ [ cons: =0 , 1 ; attrs: type , arch      ]
+     [ r        , r ; logic_imm   , *         ] and\t%<GPI:w>0, %<GPI:w>1, <SHORT:short_mask>
+     [ r        , m ; load_4      , *         ] ldr<SHORT:size>\t%w0, %1
+     [ w        , m ; f_loads     , fp        ] ldr\t%<SHORT:size>0, %1
+     [ r        , w ; neon_to_gp  , base_simd ] umov\t%w0, %1.<SHORT:size>[0]
   }
 )
 
@@ -3216,7 +3216,7 @@
 	 (plus:GPI (ashift:GPI
 		    (ANY_EXTEND:GPI
 		     (match_operand:ALLX 1 "register_operand" "r"))
-		    (match_operand 2 "aarch64_imm3" "Ui3"))
+		    (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		   (match_operand:GPI 3 "register_operand" "rk"))
 	 (const_int 0)))
    (set (match_operand:GPI 0 "register_operand" "=rk")
@@ -3235,7 +3235,7 @@
 		    (ashift:GPI
 		     (ANY_EXTEND:GPI
 		      (match_operand:ALLX 2 "register_operand" "r"))
-		     (match_operand 3 "aarch64_imm3" "Ui3")))
+		     (match_operand 3 "aarch64_shift_imm3" "Ui3")))
 	 (const_int 0)))
    (set (match_operand:GPI 0 "register_operand" "=rk")
 	(minus:GPI (match_dup 1)
@@ -3327,7 +3327,7 @@
   [(set (match_operand:GPI 0 "register_operand" "=rk")
 	(plus:GPI (ashift:GPI (ANY_EXTEND:GPI
 			       (match_operand:ALLX 1 "register_operand" "r"))
-			      (match_operand 2 "aarch64_imm3" "Ui3"))
+			      (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		  (match_operand:GPI 3 "register_operand" "r")))]
   ""
   "add\\t%<GPI:w>0, %<GPI:w>3, %w1, <su>xt<ALLX:extsize> %2"
@@ -3340,7 +3340,7 @@
 	(zero_extend:DI
 	 (plus:SI (ashift:SI (ANY_EXTEND:SI
 			      (match_operand:SHORT 1 "register_operand" "r"))
-			     (match_operand 2 "aarch64_imm3" "Ui3"))
+			     (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		  (match_operand:SI 3 "register_operand" "r"))))]
   ""
   "add\\t%w0, %w3, %w1, <su>xt<SHORT:extsize> %2"
@@ -3520,7 +3520,7 @@
   [(set (match_operand:GPI 0 "register_operand" "=rk")
 	(plus:GPI (and:GPI
 		   (ashift:GPI (match_operand:GPI 1 "register_operand" "r")
-			       (match_operand 2 "aarch64_imm3" "Ui3"))
+			       (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		   (match_operand 3 "const_int_operand" "n"))
 		  (match_operand:GPI 4 "register_operand" "r")))]
   "aarch64_uxt_size (INTVAL (operands[2]), INTVAL (operands[3])) != 0"
@@ -3537,7 +3537,7 @@
 	(zero_extend:DI
 	 (plus:SI (and:SI
 		   (ashift:SI (match_operand:SI 1 "register_operand" "r")
-			      (match_operand 2 "aarch64_imm3" "Ui3"))
+			      (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		   (match_operand 3 "const_int_operand" "n"))
 		  (match_operand:SI 4 "register_operand" "r"))))]
   "aarch64_uxt_size (INTVAL (operands[2]), INTVAL (operands[3])) != 0"
@@ -3756,8 +3756,8 @@
 })
 
 (define_expand "negvti3"
-  [(match_operand:TI 0 "register_operand")
-   (match_operand:TI 1 "register_operand")
+  [(match_operand:TI 0 "pure_register_operand")
+   (match_operand:TI 1 "pure_register_operand")
    (label_ref (match_operand 2 "" ""))]
   ""
   {
@@ -3980,7 +3980,7 @@
 	(minus:GPI (match_operand:GPI 1 "register_operand" "rk")
 		   (ashift:GPI (ANY_EXTEND:GPI
 				(match_operand:ALLX 2 "register_operand" "r"))
-			       (match_operand 3 "aarch64_imm3" "Ui3"))))]
+			       (match_operand 3 "aarch64_shift_imm3" "Ui3"))))]
   ""
   "sub\\t%<GPI:w>0, %<GPI:w>1, %w2, <su>xt<ALLX:extsize> %3"
   [(set_attr "type" "alu_ext")]
@@ -3993,7 +3993,7 @@
          (minus:SI (match_operand:SI 1 "register_operand" "rk")
 		   (ashift:SI (ANY_EXTEND:SI
 			       (match_operand:SHORT 2 "register_operand" "r"))
-			      (match_operand 3 "aarch64_imm3" "Ui3")))))]
+			      (match_operand 3 "aarch64_shift_imm3" "Ui3")))))]
   ""
   "sub\\t%w0, %w1, %w2, <su>xt<SHORT:extsize> %3"
   [(set_attr "type" "alu_ext")]
@@ -4227,7 +4227,7 @@
 	(minus:GPI (match_operand:GPI 4 "register_operand" "rk")
 		   (and:GPI
 		    (ashift:GPI (match_operand:GPI 1 "register_operand" "r")
-				(match_operand 2 "aarch64_imm3" "Ui3"))
+				(match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		    (match_operand 3 "const_int_operand" "n"))))]
   "aarch64_uxt_size (INTVAL (operands[2]),INTVAL (operands[3])) != 0"
   "*
@@ -4244,7 +4244,7 @@
 	 (minus:SI (match_operand:SI 4 "register_operand" "rk")
 		   (and:SI
 		    (ashift:SI (match_operand:SI 1 "register_operand" "r")
-			       (match_operand 2 "aarch64_imm3" "Ui3"))
+			       (match_operand 2 "aarch64_shift_imm3" "Ui3"))
 		    (match_operand 3 "const_int_operand" "n")))))]
   "aarch64_uxt_size (INTVAL (operands[2]),INTVAL (operands[3])) != 0"
   "*
@@ -4697,7 +4697,7 @@
   [(set_attr "type" "fcmp<stype>")]
 )
 
-(define_insn "cmp_swp_<shift>_reg<mode>"
+(define_insn "@cmp_swp_<shift>_reg<mode>"
   [(set (reg:CC_SWP CC_REGNUM)
 	(compare:CC_SWP (ASHIFT:GPI
 			 (match_operand:GPI 0 "register_operand" "r")
@@ -4723,7 +4723,7 @@
 	(compare:CC_SWP (ashift:GPI
 			 (ANY_EXTEND:GPI
 			  (match_operand:ALLX 0 "register_operand" "r"))
-			 (match_operand 1 "aarch64_imm3" "Ui3"))
+			 (match_operand 1 "aarch64_shift_imm3" "Ui3"))
 	(match_operand:GPI 2 "register_operand" "r")))]
   ""
   "cmp\\t%<GPI:w>2, %w0, <su>xt<ALLX:extsize> %1"
@@ -7854,14 +7854,23 @@
 
 (define_expand "isinf<mode>2"
  [(match_operand:SI 0 "register_operand")
-  (match_operand:GPF 1 "register_operand")]
+  (match_operand:GPF_HF_BF 1 "register_operand")]
  "TARGET_FLOAT"
 {
-  rtx op = force_lowpart_subreg (<V_INT_EQUIV>mode, operands[1], <MODE>mode);
-  rtx tmp = gen_reg_rtx (<V_INT_EQUIV>mode);
-  emit_move_insn (tmp, GEN_INT (HOST_WIDE_INT_M1U << (<mantissa_bits> + 1)));
+  scalar_int_mode imode = <V_INT_EQUIV>mode;
+  rtx op = force_lowpart_subreg (imode, operands[1], <MODE>mode);
+  /* There is no 16-bit arithmetic, so zero-extend the encoding of the
+     16-bit formats into a word and shift the sign bit out of the top of
+     that instead.  */
+  if (imode == HImode)
+    imode = SImode;
+  op = convert_to_mode (imode, op, 1);
+  int pad = GET_MODE_BITSIZE (imode) - GET_MODE_BITSIZE (<MODE>mode);
+  rtx tmp = gen_reg_rtx (imode);
+  emit_move_insn (tmp, gen_int_mode (HOST_WIDE_INT_M1U
+				     << (<mantissa_bits> + 1 + pad), imode));
   rtx cc_reg = gen_rtx_REG (CC_SWPmode, CC_REGNUM);
-  emit_insn (gen_cmp_swp_lsl_reg<v_int_equiv> (op, GEN_INT (1), tmp));
+  emit_insn (gen_cmp_swp_reg (ASHIFT, imode, op, GEN_INT (1 + pad), tmp));
   rtx cmp = gen_rtx_fmt_ee (EQ, SImode, cc_reg, const0_rtx);
   emit_insn (gen_aarch64_cstoresi (operands[0], cmp, cc_reg));
   DONE;
@@ -7870,14 +7879,23 @@
 
 (define_expand "isfinite<mode>2"
  [(match_operand:SI 0 "register_operand")
-  (match_operand:GPF 1 "register_operand")]
+  (match_operand:GPF_HF_BF 1 "register_operand")]
  "TARGET_FLOAT"
 {
-  rtx op = force_lowpart_subreg (<V_INT_EQUIV>mode, operands[1], <MODE>mode);
-  rtx tmp = gen_reg_rtx (<V_INT_EQUIV>mode);
-  emit_move_insn (tmp, GEN_INT (HOST_WIDE_INT_M1U << (<mantissa_bits> + 1)));
+  scalar_int_mode imode = <V_INT_EQUIV>mode;
+  rtx op = force_lowpart_subreg (imode, operands[1], <MODE>mode);
+  /* There is no 16-bit arithmetic, so zero-extend the encoding of the
+     16-bit formats into a word and shift the sign bit out of the top of
+     that instead.  */
+  if (imode == HImode)
+    imode = SImode;
+  op = convert_to_mode (imode, op, 1);
+  int pad = GET_MODE_BITSIZE (imode) - GET_MODE_BITSIZE (<MODE>mode);
+  rtx tmp = gen_reg_rtx (imode);
+  emit_move_insn (tmp, gen_int_mode (HOST_WIDE_INT_M1U
+				     << (<mantissa_bits> + 1 + pad), imode));
   rtx cc_reg = gen_rtx_REG (CC_SWPmode, CC_REGNUM);
-  emit_insn (gen_cmp_swp_lsl_reg<v_int_equiv> (op, GEN_INT (1), tmp));
+  emit_insn (gen_cmp_swp_reg (ASHIFT, imode, op, GEN_INT (1 + pad), tmp));
   rtx cmp = gen_rtx_fmt_ee (LTU, SImode, cc_reg, const0_rtx);
   emit_insn (gen_aarch64_cstoresi (operands[0], cmp, cc_reg));
   DONE;
@@ -7886,15 +7904,53 @@
 
 (define_expand "isnan<mode>2"
  [(match_operand:SI 0 "register_operand")
-  (match_operand:GPF 1 "register_operand")]
+  (match_operand:GPF_HF_BF 1 "register_operand")]
  "TARGET_FLOAT && flag_signaling_nans"
 {
-  rtx op = force_lowpart_subreg (<V_INT_EQUIV>mode, operands[1], <MODE>mode);
-  rtx tmp = gen_reg_rtx (<V_INT_EQUIV>mode);
-  emit_move_insn (tmp, GEN_INT (HOST_WIDE_INT_M1U << (<mantissa_bits> + 1)));
+  scalar_int_mode imode = <V_INT_EQUIV>mode;
+  rtx op = force_lowpart_subreg (imode, operands[1], <MODE>mode);
+  /* There is no 16-bit arithmetic, so zero-extend the encoding of the
+     16-bit formats into a word and shift the sign bit out of the top of
+     that instead.  */
+  if (imode == HImode)
+    imode = SImode;
+  op = convert_to_mode (imode, op, 1);
+  int pad = GET_MODE_BITSIZE (imode) - GET_MODE_BITSIZE (<MODE>mode);
+  rtx tmp = gen_reg_rtx (imode);
+  emit_move_insn (tmp, gen_int_mode (HOST_WIDE_INT_M1U
+				     << (<mantissa_bits> + 1 + pad), imode));
   rtx cc_reg = gen_rtx_REG (CC_SWPmode, CC_REGNUM);
-  emit_insn (gen_cmp_swp_lsl_reg<v_int_equiv> (op, GEN_INT (1), tmp));
+  emit_insn (gen_cmp_swp_reg (ASHIFT, imode, op, GEN_INT (1 + pad), tmp));
   rtx cmp = gen_rtx_fmt_ee (GTU, SImode, cc_reg, const0_rtx);
+  emit_insn (gen_aarch64_cstoresi (operands[0], cmp, cc_reg));
+  DONE;
+}
+)
+
+;; A number is normal iff its exponent field E is neither 0 nor all ones,
+;; i.e. (unsigned) (E - 1) < EXP_MAX - 1.
+(define_expand "isnormal<mode>2"
+ [(match_operand:SI 0 "register_operand")
+  (match_operand:GPF_HF_BF 1 "register_operand")]
+ "TARGET_FLOAT"
+{
+  scalar_int_mode imode = <V_INT_EQUIV>mode;
+  int exp_bits = GET_MODE_BITSIZE (<MODE>mode) - <mantissa_bits> - 1;
+  HOST_WIDE_INT exp_max = (HOST_WIDE_INT_1 << exp_bits) - 1;
+  rtx op = force_lowpart_subreg (imode, operands[1], <MODE>mode);
+  /* There is no 16-bit arithmetic, so work on the encoding of the 16-bit
+     formats in a word.  */
+  if (imode == HImode)
+    imode = SImode;
+  op = convert_to_mode (imode, op, 1);
+  op = expand_simple_binop (imode, LSHIFTRT, op, GEN_INT (<mantissa_bits>),
+			    NULL_RTX, 1, OPTAB_DIRECT);
+  op = expand_simple_binop (imode, AND, op, GEN_INT (exp_max),
+			    NULL_RTX, 1, OPTAB_DIRECT);
+  op = expand_simple_binop (imode, PLUS, op, constm1_rtx,
+			    NULL_RTX, 1, OPTAB_DIRECT);
+  rtx cc_reg = aarch64_gen_compare_reg (LTU, op, GEN_INT (exp_max - 1));
+  rtx cmp = gen_rtx_fmt_ee (LTU, SImode, cc_reg, const0_rtx);
   emit_insn (gen_aarch64_cstoresi (operands[0], cmp, cc_reg));
   DONE;
 }

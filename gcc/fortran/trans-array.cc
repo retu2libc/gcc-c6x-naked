@@ -484,8 +484,7 @@ is_pointer_array (tree expr)
 
   /* The field declaration is marked as a pointer array.  */
   if (TREE_CODE (expr) == COMPONENT_REF
-      && GFC_DECL_PTR_ARRAY_P (TREE_OPERAND (expr, 1))
-      && !GFC_CLASS_TYPE_P (TREE_TYPE (TREE_OPERAND (expr, 1))))
+      && GFC_DECL_PTR_ARRAY_P (TREE_OPERAND (expr, 1)))
     return true;
 
   return false;
@@ -497,11 +496,34 @@ is_pointer_array (tree expr)
    either a descriptor or the local decl of a descriptorless dummy array,
    which keeps the descriptor it was built from as the saved one.  */
 
-static tree
-span_addressed_array (tree expr)
+static bool
+is_span_addressed_array (tree expr)
 {
   if (is_pointer_array (expr))
-    return expr;
+    {
+      /* For classes, index arrays using the size from the virtual pointer if
+	 the array is contiguous.  Otherwise use the span.  */
+      if (TREE_CODE (expr) == COMPONENT_REF
+	  && GFC_CLASS_TYPE_P (TREE_TYPE (TREE_OPERAND (expr, 0)))
+	  && TYPE_LANG_SPECIFIC (TREE_TYPE (expr)))
+	{
+	  switch (GFC_TYPE_ARRAY_AKIND (TREE_TYPE (expr)))
+	    {
+	    case GFC_ARRAY_ASSUMED_SHAPE_CONT:
+	    case GFC_ARRAY_ASSUMED_RANK_CONT:
+	    case GFC_ARRAY_ASSUMED_RANK_ALLOCATABLE:
+	    case GFC_ARRAY_ASSUMED_RANK_POINTER_CONT:
+	    case GFC_ARRAY_ALLOCATABLE:
+	    case GFC_ARRAY_POINTER_CONT:
+	      return false;
+
+	    default:
+	      break;
+	    }
+	}
+
+      return true;
+    }
 
   if (VAR_P (expr)
       && GFC_DECL_PTR_ARRAY_P (expr)
@@ -509,9 +531,9 @@ span_addressed_array (tree expr)
       && GFC_ARRAY_TYPE_P (TREE_TYPE (expr))
       && DECL_LANG_SPECIFIC (expr)
       && GFC_DECL_SAVED_DESCRIPTOR (expr))
-    return expr;
+    return true;
 
-  return NULL_TREE;
+  return false;
 }
 
 
@@ -658,7 +680,7 @@ gfc_get_array_span (tree desc, gfc_expr *expr)
   if (tree span = GFC_DECL_GET_SPAN (desc))
     /* A span addressed dummy loaded its span on entry.  */
     tmp = span;
-  else if (span_addressed_array (desc)
+  else if (is_span_addressed_array (desc)
 	   || (get_CFI_desc (NULL, expr, &desc, NULL)
 	       && (POINTER_TYPE_P (TREE_TYPE (desc))
 		   ? GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (TREE_TYPE (desc)))
@@ -4063,9 +4085,10 @@ gfc_conv_scalarized_array_ref (gfc_se * se, gfc_array_ref * ar,
   /* A pointer array component can be detected from its field decl. Fix
      the descriptor, mark the resulting variable decl and pass it to
      gfc_build_array_ref.  */
-  if (span_addressed_array (info->descriptor)
-      || (expr && expr->ts.deferred && info->descriptor
-	  && GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (info->descriptor))))
+  if (is_span_addressed_array (info->descriptor)
+      || (expr && ((expr->ts.deferred && info->descriptor
+		    && GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (info->descriptor)))
+		   || (expr && gfc_expr_attr (expr).pdt_string))))
     {
       if (TREE_CODE (info->descriptor) == COMPONENT_REF)
 	decl = info->descriptor;
@@ -4149,6 +4172,10 @@ build_array_ref (tree desc, tree offset, tree decl, tree vptr)
 	    decl = TREE_OPERAND (cdesc, 0);
 	}
     }
+
+  if (decl == NULL_TREE
+      && is_span_addressed_array (desc))
+    decl = desc;
 
   tmp = gfc_conv_array_data (desc);
   tmp = build_fold_indirect_ref_loc (input_location, tmp);
@@ -4316,7 +4343,7 @@ gfc_conv_array_ref (gfc_se * se, gfc_array_ref * ar, gfc_expr *expr,
   if (get_CFI_desc (sym, expr, &decl, ar))
     decl = build_fold_indirect_ref_loc (input_location, decl);
   if (!expr->ts.deferred && !sym->attr.codimension
-      && span_addressed_array (se->expr))
+      && is_span_addressed_array (se->expr))
     {
       if (INDIRECT_REF_P (se->expr))
 	decl = TREE_OPERAND (se->expr, 0);
@@ -4325,16 +4352,14 @@ gfc_conv_array_ref (gfc_se * se, gfc_array_ref * ar, gfc_expr *expr,
     }
   else if (expr->ts.deferred
 	   || (sym->ts.type == BT_CHARACTER
-	       && sym->attr.select_type_temporary))
+	       && sym->attr.select_type_temporary)
+	   || (expr->ts.type == BT_CHARACTER
+	       && GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (se->expr))
+	       && gfc_expr_attr (expr).pdt_string))
     {
-      if (GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (se->expr)))
-	{
-	  decl = se->expr;
-	  if (INDIRECT_REF_P (decl))
-	    decl = TREE_OPERAND (decl, 0);
-	}
-      else
-	decl = sym->backend_decl;
+      decl = se->expr;
+      if (INDIRECT_REF_P (decl))
+	decl = TREE_OPERAND (decl, 0);
     }
   else if (sym->ts.type == BT_CLASS)
     {
@@ -7737,11 +7762,7 @@ gfc_get_dataptr_offset (stmtblock_t *block, tree parm, tree desc, tree offset,
 
   /* An array whose elements are spaced by the span needs pointer arithmetic
      to reference an element.  */
-  tmp = build_array_ref (desc, offset, span_addressed_array (desc), NULL);
-
-  /* A spanned character element is referenced by a pointer.  */
-  if (POINTER_TYPE_P (TREE_TYPE (tmp)) && span_addressed_array (desc))
-    tmp = build_fold_indirect_ref_loc (input_location, tmp);
+  tmp = build_array_ref (desc, offset, NULL, NULL);
 
   /* Offset the data pointer for pointer assignments from arrays with
      subreferences; e.g. my_integer => my_type(:)%integer_component.  */
@@ -10276,6 +10297,7 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
       bool inside_wrapper = generating_copy_helper;
 
       bool is_pdt_type = IS_PDT (c);
+      tree strlen = NULL_TREE;
 
       cdecl = c->backend_decl;
       ctype = TREE_TYPE (cdecl);
@@ -10699,7 +10721,7 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 	      else
 		gfc_add_modify (&fnblock, comp,
 				build_int_cst (TREE_TYPE (comp), 0));
-	      if (gfc_deferred_strlen (c, &comp))
+	      if (!c->attr.pdt_string && gfc_deferred_strlen (c, &comp))
 		{
 		  comp = fold_build3_loc (input_location, COMPONENT_REF,
 					  TREE_TYPE (comp),
@@ -11106,7 +11128,6 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 	    {
 	      gfc_se tse;
 	      gfc_init_se (&tse, NULL);
-	      tree strlen = NULL_TREE;
 	      gfc_expr *e = gfc_copy_expr (c->ts.u.cl->length);
 	      /* Convert the parameterized string length to its value. The
 		 string length is stored in a hidden field in the same way as
@@ -11145,7 +11166,9 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 	  if (c->ts.type == BT_CLASS)
 	    comp = gfc_class_data_get (comp);
 
-	  if (c->attr.pdt_array)
+	  if (c->attr.pdt_array
+	      || (c->attr.pdt_string
+		  && GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (comp))))
 	    {
 	      gfc_se tse;
 	      int i;
@@ -11208,6 +11231,8 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 		    tmp = build_fold_indirect_ref_loc (input_location, tmp);
 		  tmp = gfc_vptr_size_get (tmp);
 		}
+	      else if (strlen != NULL_TREE)
+		tmp = strlen;
 	      else
 		tmp = TYPE_SIZE_UNIT (gfc_get_element_type (ctype));
 	      tmp = fold_convert (gfc_array_index_type, tmp);
@@ -11218,6 +11243,12 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 	      gfc_conv_descriptor_data_set (&fnblock, comp, tmp);
 	      gfc_conv_descriptor_dtype_set (&fnblock, comp,
 					     gfc_get_dtype (ctype));
+	      if (strlen != NULL_TREE)
+		{
+		  tmp = gfc_conv_descriptor_elem_len_get (comp);
+		  gfc_add_modify (&fnblock, tmp, fold_convert (TREE_TYPE (tmp), strlen));
+		  gfc_conv_descriptor_span_set (&fnblock, comp, strlen);
+		}
 
 	      if (c->initializer && c->initializer->rank)
 		{
@@ -11280,7 +11311,7 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 	  if (c->attr.pdt_array || c->attr.pdt_string)
 	    {
 	      tmp = comp;
-	      if (c->attr.pdt_array)
+	      if (GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (comp)))
 		tmp = gfc_conv_descriptor_data_get (comp);
 	      null_cond = fold_build2_loc (input_location, NE_EXPR,
 					   logical_type_node, tmp,
@@ -11316,7 +11347,7 @@ structure_alloc_comps (gfc_symbol * der_type, tree decl, tree dest,
 			      build_empty_stmt (input_location));
 	      gfc_add_expr_to_block (&fnblock, tmp);
 
-	      if (c->attr.pdt_array)
+	      if (GFC_DESCRIPTOR_TYPE_P (TREE_TYPE (comp)))
 		gfc_conv_descriptor_data_set (&fnblock, comp, null_pointer_node);
 	      else
 		{

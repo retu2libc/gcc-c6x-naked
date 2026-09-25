@@ -33897,15 +33897,15 @@ cp_parser_late_contracts (cp_parser *parser, tree fndecl)
 static tree
 cp_parser_contract_assert (cp_parser *parser, cp_token *token)
 {
+  tree cont_assert = token->u.value;
+
   if (!flag_contracts)
     {
-      error_at (token->location, "%qs is only available with %qs",
-		"contract_assert", "-fcontracts");
+      error_at (token->location, "%qE is only available with %qs",
+		cont_assert, "-fcontracts");
       cp_parser_skip_to_end_of_statement (parser);
       return error_mark_node;
     }
-
-  tree cont_assert = token->u.value;
 
   token = cp_lexer_consume_token (parser->lexer);
   location_t loc = token->location;
@@ -33915,8 +33915,8 @@ cp_parser_contract_assert (cp_parser *parser, cp_token *token)
   if (std_attrs)
     {
       attrs_loc = make_location (attrs_loc, attrs_loc, input_location);
-      warning_at (attrs_loc, OPT_Wattributes, "attributes are ignored on %qs",
-		  "contract_assert");
+      warning_at (attrs_loc, OPT_Wattributes, "attributes are ignored on %qE",
+		  cont_assert);
       std_attrs = NULL_TREE;
     }
 
@@ -41577,6 +41577,8 @@ cp_parser_omp_clause_name (cp_parser *parser)
 	    result = PRAGMA_OMP_CLAUSE_LINEAR;
 	  else if (!strcmp ("link", p))
 	    result = PRAGMA_OMP_CLAUSE_LINK;
+	  else if (!strcmp ("local", p))
+	    result = PRAGMA_OMP_CLAUSE_LOCAL;
 	  break;
 	case 'm':
 	  if (!strcmp ("map", p))
@@ -47268,6 +47270,10 @@ cp_parser_omp_all_clauses (cp_parser *parser, omp_clause_mask mask,
 	case PRAGMA_OMP_CLAUSE_LINK:
 	  clauses = cp_parser_omp_var_list (parser, OMP_CLAUSE_LINK, clauses);
 	  c_name = "link";
+	  break;
+	case PRAGMA_OMP_CLAUSE_LOCAL:
+	  clauses = cp_parser_omp_var_list (parser, OMP_CLAUSE_LOCAL, clauses);
+	  c_name = "local";
 	  break;
 	case PRAGMA_OMP_CLAUSE_TO:
 	  if ((mask & (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_LINK)) != 0)
@@ -54608,6 +54614,11 @@ handle_omp_declare_target_clause (tree c, tree t, int device_type,
 	error_at (OMP_CLAUSE_LOCATION (c),
 		  "%qD specified both in declare target %<link%> and %qs"
 		  " clauses", t, OMP_CLAUSE_ENTER_TO (c) ? "to" : "enter");
+      else if (OMP_CLAUSE_CODE (c) == OMP_CLAUSE_LOCAL
+	       || value_member (get_identifier ("local"), TREE_VALUE (at2)))
+	error_at (OMP_CLAUSE_LOCATION (c),
+		  "%qD specified both in declare target %<link%> and "
+		  "%<local%> clauses", t);
       else
 	error_at (OMP_CLAUSE_LOCATION (c),
 		  "%qD specified both in declare target %<link%> and "
@@ -54617,6 +54628,11 @@ handle_omp_declare_target_clause (tree c, tree t, int device_type,
   if (!at1)
     {
       DECL_ATTRIBUTES (t) = tree_cons (id, NULL_TREE, DECL_ATTRIBUTES (t));
+      if (OMP_CLAUSE_CODE (c) == OMP_CLAUSE_LOCAL)
+	TREE_VALUE (DECL_ATTRIBUTES (t))
+	  = tree_cons (NULL_TREE, get_identifier ("local"),
+		       TREE_VALUE (DECL_ATTRIBUTES (t)));
+
       if (TREE_CODE (t) != FUNCTION_DECL && !is_global_var (t))
 	return true;
 
@@ -54627,9 +54643,30 @@ handle_omp_declare_target_clause (tree c, tree t, int device_type,
 	  if (ENABLE_OFFLOADING)
 	    {
 	      g->have_offload = true;
-	      if (is_a <varpool_node *> (node))
+	      if (is_a <varpool_node *> (node)
+		  && OMP_CLAUSE_CODE (c) != OMP_CLAUSE_LOCAL)
 		vec_safe_push (offload_vars, t);
 	    }
+	}
+    }
+  else
+    {
+      bool saw_local = value_member (get_identifier ("local"),
+				     TREE_VALUE (at1));
+      if (saw_local && OMP_CLAUSE_CODE (c) == OMP_CLAUSE_ENTER)
+	{
+	  error_at (OMP_CLAUSE_LOCATION (c),
+		    "%qD specified both in declare target %<local%> and "
+		    "%qs clauses", t,
+		    OMP_CLAUSE_ENTER_TO (c) ? "to" : "enter");
+	  return false;
+	}
+      else if (!saw_local && OMP_CLAUSE_CODE (c) == OMP_CLAUSE_LOCAL)
+	{
+	  error_at (OMP_CLAUSE_LOCATION (c),
+		    "%qD specified both in declare target %<local%> and "
+		    "%<to%> or %<enter%> clauses", t);
+	  return false;
 	}
     }
   if (TREE_CODE (t) != FUNCTION_DECL)
@@ -54682,6 +54719,7 @@ handle_omp_declare_target_clause (tree c, tree t, int device_type,
 	( (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_TO)		\
 	| (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_ENTER)	\
 	| (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_LINK)		\
+	| (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_LOCAL)	\
 	| (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_DEVICE_TYPE)	\
 	| (OMP_CLAUSE_MASK_1 << PRAGMA_OMP_CLAUSE_INDIRECT))
 

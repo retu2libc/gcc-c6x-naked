@@ -604,7 +604,7 @@ struct arith_t {
     : format(format), on_error(NULL), not_error(NULL)
   {}
   arith_t( const cbl_loc_t& loc,
-           cbl_arith_format_t format, refer_list_t * refers );
+           cbl_arith_format_t format, const refer_list_t& refers );
 
   bool corresponding() const { return format == corresponding_e; }
 
@@ -1207,8 +1207,8 @@ teed_up_names() {
 #define cdf_tokens cdf_current_tokens()
 
 int
-redefined_token( const cbl_name_t name ) {
-  return cdf_tokens.redefined_as(name);
+redefined_token( const cbl_name_t name, int token ) {
+  return cdf_tokens.redefined_as(name, token);
 }
 
 static bool
@@ -1308,9 +1308,8 @@ struct refer_list_t {
     }
   }
   // the source is not always to be deleted
-  explicit refer_list_t( const cbl_refer_t& refer ) {
-    refers.push_back(refer);
-  }
+  explicit refer_list_t( const cbl_refer_t& refer ) : refers(1, refer) {}
+  
   refer_list_t * push_back( cbl_refer_t *refer ) {
     refers.push_back(*refer);
     delete refer;
@@ -1333,10 +1332,9 @@ struct refer_list_t {
   }
   std::vector<cbl_refer_t>
   vectorize() {
-    std::vector<cbl_refer_t> tgt(refers.size());
-    std::copy(refers.begin(), refers.end(), tgt.begin());
+    std::vector<cbl_refer_t> output(refers.begin(), refers.end());
     refers.clear();
-    return tgt;
+    return output;
   }
 };
 
@@ -3275,7 +3273,8 @@ by_content_ok( const cbl_loc_t& loc,
     if( arg.by_content() && field->has_attr(intermediate_e) ) {
       auto e = symbol_program( 0, field->name, true ); // seek prototoype
       if( ! e ) {
-        dialect_ok(loc, IbmContentExpr, "BY CONTENT expression");
+        auto argloc = symbol_temporary_location(arg.field());
+        dialect_ok(argloc, IbmContentExpr, "BY CONTENT expression");
       }
     }
     if( arg.crv == by_value_e &&
@@ -3317,6 +3316,32 @@ group_attr( const cbl_field_t * field ) {
   return p->attr;
 }
 
+/*       
+ * 13.16.3 Syntax rules
+ * a) if the literal is alphanumeric, 'PICTURE X(length)'
+ * b) if the literal is boolean, 'PICTURE 1(length)'
+ * c) if the literal is national, 'PICTURE N(length)'
+ * (We don't support boolean yet.)
+ */
+static void
+update_prior_invalid_field( const cbl_field_t *field = nullptr) {
+  symbol_elem_t *e = field? symbol_at(field->our_index) :  symbols_end();
+  e--;
+  if( e->type == SymDataSection ) e--;
+  if( (e)->type == SymField ) {
+    auto f = cbl_field_of(e);
+    if( ! field ) field = f; // fake it
+    if( field->level <= f->level ) {
+      if( f->type == FldInvalid && f->data.has_initial_value() ) {
+        if( f->has_attr(quoted_e) || is_figconst(f) ) {
+          f->type = FldAlphanumeric;
+          assert(0 < f->char_capacity());
+        }
+      }
+    }
+  }
+}
+
 static struct cbl_field_t *
 field_add( const cbl_loc_t& loc, cbl_field_t *field ) {
   switch(current_data_section) {
@@ -3351,7 +3376,10 @@ field_add( const cbl_loc_t& loc, cbl_field_t *field ) {
       return NULL;
       break;
     }
-  }
+  } 
+
+  update_prior_invalid_field(field);
+
   return field;
 }
 

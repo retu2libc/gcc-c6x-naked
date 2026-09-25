@@ -138,10 +138,10 @@ SYSTEM.def: Makefile
              -D=$(GM2_SRC)/gm2-libs-min/SYSTEM.def \
              -M=$(GM2_SRC)/gm2-libs-min/SYSTEM.mod \
              -I=$(GM2_SRC)/gm2-libs-min -I=$(GM2_SRC)/gm2-libs \
-             -C="$(GM2_FOR_TARGET_ESC) -fno-exceptions" -o $@
+             -C="$(GM2_FOR_TARGET) -fno-exceptions" -o $@
 else
 SYSTEM.def: Makefile
-	bash $(GM2_SRC)/tools-src/makeSystem -fpim \
+	$(SHELL) $(GM2_SRC)/tools-src/makeSystem -fpim \
              $(GM2_SRC)/gm2-libs-min/SYSTEM.def \
              $(GM2_SRC)/gm2-libs-min/SYSTEM.mod \
              -I$(GM2_SRC)/gm2-libs-min -I$(GM2_SRC)/gm2-libs \

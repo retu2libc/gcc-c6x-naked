@@ -806,6 +806,8 @@ function_pointer_from_name(const cbl_refer_t &name,
                          NULL);
   tree function_pointer_type = build_pointer_type(function_type);
 
+  cbl_call_convention_t call_convention = current_call_convention();
+
   if( name.field->type == FldPointer )
     {
     tree location;
@@ -857,6 +859,7 @@ function_pointer_from_name(const cbl_refer_t &name,
                    INT,
                    current_function->our_symbol_table_index),
                  gg_string_literal(name.field->data.original()),
+                 build_int_cst_type(INT, call_convention),
                  NULL_TREE));
     }
   else
@@ -872,6 +875,7 @@ function_pointer_from_name(const cbl_refer_t &name,
                  gg_get_address_of(name.field->var_decl_node),
                  refer_offset(name),
                  refer_size_source(name),
+                 build_int_cst_type(INT, call_convention),
                  NULL_TREE));
     }
 
@@ -9484,6 +9488,7 @@ parser_file_write( cbl_file_t *file,
                    bool sequentially
                  )
   {
+  RETURN_IF_PARSE_ONLY;
   if( !file )
     {
     cbl_internal_error("%s: called with NULL *file", __func__);
@@ -13600,12 +13605,27 @@ parser_set_pointers( size_t ntgt, cbl_refer_t *tgts, cbl_refer_t source )
         && (source.field->type == FldAlphanumeric
             || source.field->type == FldLiteralA))
       {
-      // This is something like SET varp TO ENTRY "ref".
-      tree function_pointer = function_pointer_from_name(source,
-                                                   COBOL_FUNCTION_RETURN_64);
-      gg_memcpy(qualified_data_location(tgts[i]),
-                gg_get_address_of(function_pointer),
-                sizeof_pointer);
+      if( strcmp(source.field->name, "ZEROES") == 0 )
+        {
+        // This is an extra-special corner case.  No, it's worse than a corner
+        // case.  It's a pointy case.  The caller is essentially setting the
+        // pointer to the figurative constant ZEROES.  But ZERO is both an
+        // alphanumeric and a numeric, depending on context.  Fine.  It's
+        // weird.  Let's just set the destination to zeroes, and be done with
+        // it.
+        gg_memset(qualified_data_location(tgts[i]),
+                  integer_zero_node,
+                  sizeof_pointer);
+        }
+      else
+        {
+        // This is something like SET varp TO ENTRY "ref".
+        tree function_pointer = function_pointer_from_name(source,
+                                                     COBOL_FUNCTION_RETURN_64);
+        gg_memcpy(qualified_data_location(tgts[i]),
+                  gg_get_address_of(function_pointer),
+                  sizeof_pointer);
+        }
       }
     else
       {
@@ -14430,7 +14450,14 @@ actually_create_the_static_field( cbl_field_t *new_var,
     }
   tree offset = build_int_cst_type(SIZE_T, new_var->offset);
   tree name = gg_string_literal(new_var->name);
-  tree picture = gg_string_literal(new_var->data.picture);
+
+  char *expanded = expand_picture(new_var->data.picture);
+  if( new_var->type == FldNumericEdited )
+    {
+    expand_expanded(expanded);
+    }
+  tree picture = gg_string_literal(expanded);
+  free(expanded);
   tree initial;
   if( length_of_initial_string == 0 || !new_var->data.has_initial_value() )
     {

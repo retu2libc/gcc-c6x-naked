@@ -3503,12 +3503,12 @@ cond_if_else_store_replacement_1 (basic_block then_bb, basic_block else_bb,
 }
 
 /* Return the last store in BB with VDEF or NULL if there are
-   loads following the store. VPHI is where the only use of the
+   loads following the store. VUSE_ONLY is where the only use of the
    vdef should be.  If ONLYONESTORE is true, then the store is
    the only store in the BB.  */
 
 static gimple *
-trailing_store_in_bb (basic_block bb, tree vdef, gphi *vphi, bool onlyonestore)
+trailing_store_in_bb (basic_block bb, tree vdef, gimple *vuse_only, bool onlyonestore)
 {
   if (SSA_NAME_IS_DEFAULT_DEF (vdef))
     return NULL;
@@ -3524,14 +3524,17 @@ trailing_store_in_bb (basic_block bb, tree vdef, gphi *vphi, bool onlyonestore)
       && gimple_code (SSA_NAME_DEF_STMT (gimple_vuse (store))) != GIMPLE_PHI)
     return NULL;
 
+  // Needs to be an simple store and not a call.
+  if (!gimple_assign_single_p (store))
+    return NULL;
 
   /* Verify there is no load or store after the store, the vdef of the store
-     should only be used by the vphi joining the 2 bbs.  */
+     should only be used by the vuse_only.  */
   use_operand_p use_p;
   gimple *use_stmt;
   if (!single_imm_use (gimple_vdef (store), &use_p, &use_stmt))
     return NULL;
-  if (use_stmt != vphi)
+  if (use_stmt != vuse_only)
     return NULL;
 
   return store;
@@ -3601,7 +3604,9 @@ cond_store_replacement_limited (basic_block middle_bb, basic_block join_bb,
 
   if (!store_middle
       || !gimple_assign_single_p (store_middle)
-      || gimple_has_volatile_ops (store_middle))
+      || gimple_has_volatile_ops (store_middle)
+      // Rejects clobbers too.
+      || gimple_clobber_p (store_middle))
     return false;
 
   locus = gimple_location (store_middle);
@@ -3610,8 +3615,6 @@ cond_store_replacement_limited (basic_block middle_bb, basic_block join_bb,
   if ((!REFERENCE_CLASS_P (lhs)
        && !DECL_P (lhs))
       || !is_gimple_reg_type (TREE_TYPE (lhs)))
-    return false;
-  if (TREE_CODE (rhs) != SSA_NAME)
     return false;
 
   /* Three cases that can be handled:
@@ -3854,8 +3857,49 @@ cond_if_else_store_replacement_limited (basic_block then_bb, basic_block else_bb
   if (!else_assign)
     return false;
 
-  return cond_if_else_store_replacement_1 (then_bb, else_bb, join_bb,
-					   then_assign, else_assign, vphi);
+  if (!cond_if_else_store_replacement_1 (then_bb, else_bb, join_bb,
+					 then_assign, else_assign, vphi))
+    {
+      gimple *then_n, *else_n;
+
+      // Try to see if one "store" can be skipped on either side.
+      if (!flag_expensive_optimizations)
+	return false;
+      then_n = trailing_store_in_bb (then_bb, gimple_vuse (then_assign),
+				     then_assign, true);
+      if (then_n)
+	{
+	  ao_ref then_ref_n;
+	  ao_ref_init (&then_ref_n, gimple_assign_lhs (then_n));
+	  if (stmt_may_clobber_ref_p_1 (then_assign, &then_ref_n, false)
+	      || ref_maybe_used_by_stmt_p (then_assign, &then_ref_n, false))
+	    then_n = nullptr;
+	}
+      else_n = trailing_store_in_bb (else_bb, gimple_vuse (else_assign),
+				     else_assign, true);
+      if (else_n)
+	{
+	  ao_ref else_ref_n;
+	  ao_ref_init (&else_ref_n, gimple_assign_lhs (else_n));
+	  if (stmt_may_clobber_ref_p_1 (else_assign, &else_ref_n, false)
+	      || ref_maybe_used_by_stmt_p (else_assign, &else_ref_n, false))
+	    else_n = nullptr;
+	}
+      if (then_n
+	  && cond_if_else_store_replacement_1 (then_bb, else_bb, join_bb,
+					       then_n, else_assign, vphi))
+	return true;
+      if (else_n
+	  && cond_if_else_store_replacement_1 (then_bb, else_bb, join_bb,
+					       then_assign, else_n, vphi))
+	return true;
+      if (else_n && then_n
+	  && cond_if_else_store_replacement_1 (then_bb, else_bb, join_bb,
+					       then_n, else_n, vphi))
+	return true;
+      return false;
+  }
+  return true;
 }
 
 /* Conditional store replacement.  We already know
@@ -4063,6 +4107,22 @@ cond_if_else_store_replacement (basic_block then_bb, basic_block else_bb,
   return ok;
 }
 
+/* Returns true when P is based on an induction variable
+   inside MERGE's inner most loop.  */
+static bool
+induction_based (tree p, basic_block merge)
+{
+  if (TREE_CODE (p) != SSA_NAME)
+    return false;
+  tree ev = analyze_scalar_evolution (merge->loop_father, p);
+  if (chrec_contains_undetermined (ev)
+      || chrec_contains_symbols_defined_in_loop (ev, merge->loop_father->num))
+    return false;
+  if (tree_does_not_contain_chrecs (ev))
+    return false;
+  return true;
+}
+
 /* If PHI at MERGE is a "load PHI", PHI <*P, *Q> whose two arguments are
    single-use, non-volatile scalar MEM_REF loads reading the same memory state
    (same VUSE), factor the load out: introduce P' = PHI <P, Q> and a single
@@ -4078,15 +4138,6 @@ static bool
 factor_out_conditional_load (edge e0, edge e1, basic_block merge, gphi *phi,
 			     bool early_p, bool before_vect)
 {
-  /* Factoring out a load during the first phi means we can't
-     trust if this is inside a loop or not; due to before inlining.  */
-  if (early_p)
-    return false;
-
-  /* Before vectorization, we don't want to factor out loads unless not inside a loop.  */
-  if (before_vect && bb_loop_depth (merge) != 0)
-    return false;
-
   /* Not a virtual operand. */
   if (virtual_operand_p (gimple_phi_result (phi))
       /* can only handle the merge bb having 2 predecessors.  */
@@ -4203,6 +4254,23 @@ factor_out_conditional_load (edge e0, edge e1, basic_block merge, gphi *phi,
   tree newindex;
   gimple_stmt_iterator gsi;
   gsi = gsi_after_labels (merge);
+
+  // factoring of the same pointer should be allowed
+  // irrespect to loops.
+  if (p0 == p1 && operand_equal_p (index0, index1))
+    ;
+  // Before inlining, we can't tell if different
+  // pointers are going to be induction variable based
+  // or not.
+  else if (early_p)
+    return false;
+  // Before vectorization, don't factor out
+  // pointers which are based on induction variables.
+  else if (before_vect
+	   && bb_loop_depth (merge) != 0
+	   && (induction_based (p0, merge)
+	       || induction_based (p1, merge)))
+    return false;
 
   /* Try to handle different indices.  */
   if (operand_equal_p (index0, index1))
@@ -4354,6 +4422,11 @@ factor_out_all (edge e1, edge e2, basic_block merge,
 {
   bool changed = false;
   bool do_over;
+  bool before_vect = !fold_before_rtl_expansion_p ();
+  // If vectorization is disable, then we are never before the vectorizer.
+  if (!flag_tree_loop_vectorize
+      && !merge->loop_father->force_vectorize)
+    before_vect = false;
   basic_block bb1 = e1->src;
   basic_block bb2 = e2->src;
   do
@@ -4385,7 +4458,7 @@ factor_out_all (edge e1, edge e2, basic_block merge,
 	  /* Conditional load elimination can only be on a diamond.  */
 	  if ((diamond_p
 	       && factor_out_conditional_load (e1, e2, merge, phi, early_p,
-					       !fold_before_rtl_expansion_p ()))
+					       before_vect))
 	      || factor_out_conditional_operation (e1, e2, merge, phi,
 						   cond_stmt, early_p))
 	    {
@@ -4973,6 +5046,18 @@ pass_phiopt::execute (function *)
 {
   bool do_hoist_loads = !early_p ? gate_hoist_loads () : false;
   bool cfgchanged = false;
+  bool need_loop_finalize = false;
+
+  if (!early_p
+      && !fold_before_rtl_expansion_p ()
+      && (flag_tree_loop_vectorize
+	  || cfun->has_force_vectorize_loops)
+      && number_of_loops (cfun) > 1)
+  {
+    loop_optimizer_init (LOOPS_NORMAL);
+    scev_initialize ();
+    need_loop_finalize = true;
+  }
 
   calculate_dominance_info (CDI_DOMINATORS);
   mark_ssa_maybe_undefs ();
@@ -5063,6 +5148,11 @@ pass_phiopt::execute (function *)
 
   execute_over_cond_phis (phiopt_exec);
 
+  if (need_loop_finalize)
+    {
+      loop_optimizer_finalize ();
+      scev_finalize ();
+    }
   if (replicate_conds_over_phis ())
     {
       free_dominance_info (CDI_DOMINATORS);

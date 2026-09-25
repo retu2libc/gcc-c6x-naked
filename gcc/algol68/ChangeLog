@@ -1,3 +1,195 @@
+2026-09-24  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-moids-equivalence.cc (are_modes_equivalent): Do not
+	string-compare INDICANTs.
+
+2026-09-22  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-low.cc (lower_module_text): Mark prelude_decl an
+	postlude_decl as artificial.
+
+2026-09-21  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-modes.cc (a68_resolve_equivalent): Rename from
+	resolve_equivalent and made global.
+	(resolve_eq_members): Adapt calls to resolve_equivalent
+	accordingly.
+	(resolve_eq_tags): Likewise.
+	(bind_modes): Likewise.
+	(compute_derived_modes): Likewise.
+	* a68.h: Add prototype for a68_resolve_equivalent.
+	* a68-parser-extract.cc (a68_extract_revelation): Resolve
+	equivalences in imported modes.
+
+2026-09-21  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-attrs.def (COMPLEX_SYMBOL): Remove.
+	* a68-parser-bottom-up.cc (reduce_declarers): Remove reduction of
+	COMPLEX_SYMBOL.
+	(reduce_declarers): Do not handle COMPLEX_SYMBOL.
+	* a68-parser.cc (a68_dont_mark_here): Likewise.
+
+2026-09-20  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-low-units.cc (a68_lower_denotation): strtoul can return
+	errno /= 0 in overflow.
+
+2026-09-19  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* ga68.vw: Typos fixed, section 8.0.1 added, consistent {x} style
+	to refer to rules within pragmatics.
+
+2026-09-19  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-sprops.cc (make_origin): Initialize properties of the
+	new origin from a parse node.
+	(sprops_for_denotation): Pass parse node to make_origin and remove
+	now superfluous code.
+	(sprops_for_deproceduring): Likewise.
+	(sprops_for_proceduring): Likewise.
+	(sprops_for_loop_clause): Likewise.
+	(sprops_for_serial_clause): Likewise.
+	(sprops_for_parallel_clause): Likewise.
+	(sprops_for_conditional_clause): Likewise.
+	(sprops_for_case_clause): Likewise.
+	(sprops_for_collateral_clause): Likewise.
+	(sprops_for_conformity_clause): Likewise.
+	(sprops_for_identity_relation): Likewise.
+	(sprops_for_logical_function): Likewise.
+	(sprops_for_call): Likewise.
+	(sprops_for_generator): Likewise.
+	(sprops_for_formula): Likewise.
+	(sprops_for_applied_identifier): Likewise.
+	(sprops_for_assertion): Likewise.
+	(sprops_for_decl): Likewise.
+	(sprops_for_unit): Likewise.
+
+2026-09-19  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-sprops.cc (sprops_for_deproceduring): Set BNO.
+	(sprops_for_proceduring): Likewise.
+	(sprops_for_loop_clause): Likewise.
+	(sprops_for_serial_clause): Likewise.
+	(sprops_for_parallel_clause): Likewise.
+	(sprops_for_conditional_clause): Likewise.
+	(sprops_for_case_clause): Likewise.
+	(sprops_for_collateral_clause): Likewise.
+	(sprops_for_conformity_clause): Likewise.
+	(sprops_for_identity_relation): Likewise.
+	(sprops_for_logical_function): Likewise.
+	(sprops_for_call): Likewise.
+	(sprops_for_generator): Likewise.
+	(sprops_for_formula): Likewise.
+	(sprops_for_assertion): Likewise.
+	(sprops_for_decl): Likewise.
+	(sprops_for_decl): Likewise.
+	(sprops_for_unit): Likewise.
+
+2026-09-19  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-types.h: Clarify roles of field set by the scope checker in
+	TAG_T.
+
+2026-09-19  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-parser-scope.cc: Do not claim the scope pass finishes the
+	parser.
+
+2026-09-18  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68.h: Add prototypes for a68_sprops, a68_yields_value and
+	a68_is_declaration.
+	* a68-types.h (a68_access): New type.
+	(a68_kindo): Likewise.
+	(ORIGIN_T): Likewise.
+	(ACCESS_T): Likewise.
+	(NODE_T): Add fields origin and access.
+	(TAG_T): Likewise.
+	(ACCESS_NIHIL): Remove.
+	(ACCESS_CONSTANT): Likewise.
+	(ACCESS_DIRIDEN): Likewise.
+	(ACCESS_INDIDEN): Likewise.
+	(ACCESS_DIRWOST): Likewise.
+	(DEFLEX): Likewise.
+	(FLEXO): Likewise.
+	(BNO): Define.
+	(DEFLEX): Likewise.
+	(DIAGO): Likewise.
+	* a68-parser-sprops.cc: New file.
+	* a68-parser-attrs.def: New comment.
+	* a68-parser-bottom-up.cc (reduce_enquiry_clauses): Add a few
+	comments to improve readability.
+	* a68-parser.cc (a68_is_declaration): New function.
+	(a68_yields_value): Likewise.
+	(a68_parser): Run the sprops pass.
+	(a68_new_node): Initialize ORIGIN and ACCESS.
+	(a68_new_tag): Likewise, for tags.
+	* Make-lang.in (ALGOL68_OBJS): Build algol68/a68-parser-sprops.o.
+	* a68-parser-debug.cc (a68_dump_parse_tree_1): Show static
+	properties whenever requested.
+	* a68-low-clauses.cc: Fix grammar for initialiser series and
+	closed clause in comments.
+	* a68-low.cc (a68_low_assignation): Fix comment.
+
+2026-09-16  Pietro Monteiro  <pietro@sociotechnical.xyz>
+
+	* a68-parser.cc (a68_get_node_location): Return a location
+	that covers the whole span of the node.
+
+2026-09-16  Pietro Monteiro  <pietro@sociotechnical.xyz>
+
+	* a68-low-bits.cc (a68_bits_elem): Use LINE_NUMBER (p) instead
+	of NUMBER (LINE (INFO (p))).
+	* a68-low-chars.cc (a68_char_repr): Likewise.
+	* a68-low-coercions.cc (a68_lower_uniting): Likewise.
+	* a68-low-misc.cc (a68_lower_assertion): Likewise.
+	* a68-low-multiples.cc (a68_multiple_slice): Likewise.
+	(a68_multiple_single_bound_check): Likewise.
+	(a68_boundable_dim_check): Likewise.
+	(a68_multiple_bounds_check): Likewise.
+	(a68_multiple_bounds_check_equal): Likewise.
+	* a68-low.cc (a68_checked_indirect_ref): Likewise.
+	* a68-parser-scanner.cc (new_source_line): Adjust the fields
+	when creating a LINE_T.
+	(append_source_line): Add a location_t to the new line.
+	(append_environ): Track the locations of pre/post-lude.
+	(read_source_file): Create a linemap for the source file.
+	(include_files):  Create a linemap for included source files.
+	* a68-parser-top-down.cc (a68_phrase_to_text): Use unsigned
+	for line numbers.
+	* a68-parser.cc (a68_get_node_location): Return the location of
+	the node info line.
+	(a68_get_line_location): Return the location of the line.
+	* a68-pretty-print.h (a68_line_format_token): Use the line's
+	filename to check if it's part of the standard environment.
+	* a68-types.h (struct LINE_T): Remove filename and number
+	fields from LINE_T and add location.
+	(FILENAME): Delete macro.
+	(LOCATION): New macro.
+	(LINE_NUMBER): Adjust to use LINE_NO (line).
+	* a68.h (FILENAME): New function.
+	(LINE_NO): Likewise.
+
+2026-09-16  Pietro Monteiro  <pietro@sociotechnical.xyz>
+
+	* a68-parser-scanner.cc (concatenate_lines): Delete.
+	(read_source_file): Stop calling concatenate_lines.
+	(next_char): Skip backslash at the end of lines.
+	(include_files): Stop calling concatenate_lines.
+
+2026-09-10  Jose E. Marchesi  <jemarch@gnu.org>
+
+	* a68-low-ranges.cc (a68_pop_range): Do not consolidate refs in
+	last unit in the range's statement list, becuase it has already
+	been consolidated.
+	(a68_add_completer): Just call to a68_consolidate_ref and avoid
+	tsi_delink.
+	(a68_pop_serial_clause_range): Likewise.
+	* a68-low-clauses.cc (a68_lower_labeled_unit): Consolidate ref in
+	second componend of compound expr.
+	* a68-low.cc (a68_consolidate_ref): Simplify and do not handle
+	compound expressions in a special way.
+
 2026-07-20  Jose E. Marchesi  <jemarch@gnu.org>
 
 	PR algol68/126330

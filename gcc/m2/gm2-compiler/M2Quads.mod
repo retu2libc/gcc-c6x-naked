@@ -12661,18 +12661,28 @@ END SilentBuildConstructor ;
 PROCEDURE BuildConstructor (tokcbrpos: CARDINAL) ;
 VAR
    tok       : CARDINAL ;
+   name      : Name ;
+   errsym,
    constValue,
    type      : CARDINAL ;
 BEGIN
-   PopTtok (type, tok) ;
+   PopTntok (type, name, tok) ;
    constValue := MakeTemporary (tok, ImmediateValue) ;
    PutVar (constValue, type) ;
    PutConstructor (constValue) ;
    PushValue (constValue) ;
    IF type = NulSym
    THEN
-      MetaErrorT0 (tokcbrpos,
-                   '{%E}constructor requires a type before the opening %{')
+      IF tok = UnknownTokenNo
+      THEN
+         MetaErrorT0 (tokcbrpos,
+                      '{%E}constructor requires a type before the opening %{')
+      ELSE
+         (* Spellcheck.  *)
+         errsym := MakeError (tok, name) ;
+         MetaErrorT1 (tok, 'constructor type {%1Ea} is undefined {%1&s}', errsym) ;
+         UnknownReported (errsym)
+      END
    ELSE
       ChangeToConstructor (tok, type) ;
       PutConstructorFrom (constValue, type) ;
@@ -15949,6 +15959,27 @@ BEGIN
    END ;
    PushAddress (BoolStack, f)
 END PushTFntok ;
+
+
+(*
+   PopTntok - Pop a True/number/tok from the True/False stack.
+              True and False are assumed to contain Symbols.
+              The number is word sized.
+*)
+
+PROCEDURE PopTntok (VAR True, n: WORD; VAR tokno: CARDINAL) ;
+VAR
+   f: BoolFrame ;
+BEGIN
+   f := PopAddress (BoolStack) ;
+   WITH f^ DO
+      True := TrueExit ;
+      n := name ;
+      tokno := tokenno ;
+      Assert (NOT BooleanOp)
+   END ;
+   DISPOSE (f)
+END PopTntok ;
 
 
 (*

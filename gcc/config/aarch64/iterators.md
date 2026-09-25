@@ -65,6 +65,9 @@
 ;; Iterator for all 16-bit scalar floating point modes (HF, BF)
 (define_mode_iterator HFBF [HF BF])
 
+;; Iterator for all scalar floating point modes (HF, BF, SF, DF)
+(define_mode_iterator GPF_HF_BF [HF BF SF DF])
+
 ;; Iterator for all integer modes (up to 64-bit) plus all General Purpose
 ;; Floating-point registers (32- and 64-bit modes).
 (define_mode_iterator ALLI_GPF [ALLI GPF])
@@ -253,11 +256,14 @@
 ;; All sub-32-bit integer modes.
 (define_mode_iterator VSSUB32_I [V2QI QI HI])
 
-;; All sub-64-bit floating-point modes.
-(define_mode_iterator VSSUB64_F [V2HF V2BF HF BF])
-
 ;; All 32-bit integer and sub-64-bit floating point modes.
-(define_mode_iterator VS32_I_SUB64_F [V4QI V2HI VSSUB64_F])
+(define_mode_iterator VS32_I_SUB64_F [V4QI V2HI V2HF V2BF HF BF])
+
+;; All 32-bit integer and sub-64-bit floating point modes, excluding BF
+;; and HF when there's no FP16 ISA support.
+(define_mode_iterator VS32_I_SUB64_F_CONDFP16 [V4QI V2HI V2HF V2BF
+					(HF "TARGET_SIMD_F16INST")
+					(BF "TARGET_SIMD_F16INST")])
 
 ;; All Advanced SIMD modes suitable for moving, loading, and storing.
 (define_mode_iterator VALL_F16 [V8QI V16QI V4HI V8HI V2SI V4SI V2DI
@@ -895,6 +901,13 @@
 	VNx4SI
 ])
 
+(define_mode_iterator SME_TMOPA_BHSF [(VNx8HF "TARGET_STREAMING_SME_F16F16")
+				      (VNx8BF "TARGET_STREAMING_SME_B16B16")
+				      VNx4SF])
+
+(define_mode_iterator SME_TMOPA_FP8 [(VNx8HI "TARGET_STREAMING_SME_F8F16")
+				     (VNx4SI "TARGET_STREAMING_SME_F8F32")])
+
 ;; ------------------------------------------------------------------
 ;; Unspec enumerations for Advance SIMD. These could well go into
 ;; aarch64.md but for their use in int_iterators here.
@@ -1405,6 +1418,8 @@
     UNSPEC_SME_FMOPA
     UNSPEC_SME_FMOPS
     UNSPEC_SME_FSUB
+    UNSPEC_SME_FTMOPA
+    UNSPEC_SME_FTMOPA_FP8
     UNSPEC_SME_LD1_HOR
     UNSPEC_SME_LD1_VER
     UNSPEC_SME_READ
@@ -1423,6 +1438,7 @@
     UNSPEC_SME_SMOPS
     UNSPEC_SME_ST1_HOR
     UNSPEC_SME_ST1_VER
+    UNSPEC_SME_STMOPA
     UNSPEC_SME_SUB
     UNSPEC_SME_SUB_WRITE
     UNSPEC_SME_SUDOT
@@ -1431,6 +1447,7 @@
     UNSPEC_SME_SUMOP4S
     UNSPEC_SME_SUMOPA
     UNSPEC_SME_SUMOPS
+    UNSPEC_SME_SUTMOPA
     UNSPEC_SME_UDOT
     UNSPEC_SME_UVDOT
     UNSPEC_SME_UMLA
@@ -1445,6 +1462,8 @@
     UNSPEC_SME_USMOP4S
     UNSPEC_SME_USMOPA
     UNSPEC_SME_USMOPS
+    UNSPEC_SME_USTMOPA
+    UNSPEC_SME_UTMOPA
     UNSPEC_SME_WRITE
     UNSPEC_SME_WRITE_HOR
     UNSPEC_SME_WRITE_VER
@@ -1462,7 +1481,9 @@
     UNSPECV_LDA			; Represent an atomic load or load-acquire.
     UNSPECV_LDAP		; Represent an atomic acquire load with RCpc semantics.
     UNSPECV_STL			; Represent an atomic store or store-release.
-    UNSPECV_STSHH		; Represent an atomic store with an stshh hint.
+    UNSPECV_ATOMIC_HINTS_STORE	; Represent an atomic store with a hint.
+    UNSPECV_ATOMIC_HINTS_FETCH	; Represent an atomic fetch with a hint.
+    UNSPECV_HINTS_FETCH		; Likewise.
     UNSPECV_ATOMIC_CMPSW	; Represent an atomic compare swap.
     UNSPECV_ATOMIC_EXCHG	; Represent an atomic exchange.
     UNSPECV_ATOMIC_CAS		; Represent an atomic CAS.
@@ -1504,7 +1525,7 @@
 
 (define_mode_attr half_mask [(HI "255") (SI "65535") (DI "4294967295")])
 
-(define_mode_attr mantissa_bits [(SF "23") (DF "52")])
+(define_mode_attr mantissa_bits [(HF "10") (BF "7") (SF "23") (DF "52")])
 
 ;; For constraints used in scalar immediate vector moves
 (define_mode_attr hq [(HI "h") (QI "q")])
@@ -2484,7 +2505,7 @@
 			       (V2SF "V2SI") (V4SF  "V4SI")
 			       (DF   "DI")   (V2DF  "V2DI")
 			       (SF   "SI")   (SI    "SI")
-			       (HF    "HI")
+			       (HF    "HI")  (BF    "HI")
 			       (VNx16QI "VNx16QI")
 			       (VNx8HI  "VNx8HI") (VNx8HF "VNx8HI")
 			       (VNx8BF  "VNx8HI")
@@ -3031,6 +3052,12 @@
 
 (define_mode_attr za32_last_offset [(VNx16QI "3") (VNx32QI "3") (VNx64QI "3")
 				    (VNx8HI "1") (VNx16HI "1") (VNx32HI "1")])
+
+;; The number of bits required to specify a ZA tile of a certain element size.
+(define_mode_attr za_imm_bits [(VNx8HI "1") (VNx4SI "2") (VNx2DI "3")
+			       (VNx1TI "4")
+			       (VNx8BF "1")
+			       (VNx8HF "1") (VNx4SF "2") (VNx2DF "3")])
 
 (define_mode_attr vg_modifier [(VNx16QI "")
 			       (VNx32QI ", vgx2")
@@ -4418,6 +4445,11 @@
 	UNSPEC_SME_FVDOTT_FP8
 ])
 
+(define_int_iterator SME_TMOP_INT [UNSPEC_SME_STMOPA UNSPEC_SME_UTMOPA])
+(define_int_iterator SME_TMOP_INT_CROSS [UNSPEC_SME_SUTMOPA UNSPEC_SME_USTMOPA])
+(define_int_iterator SME_TMOP_FP [UNSPEC_SME_FTMOPA])
+(define_int_iterator SME_TMOP_FP8 [UNSPEC_SME_FTMOPA_FP8])
+
 ;; Iterators for atomic operations.
 
 (define_int_iterator ATOMIC_LDOP
@@ -4580,6 +4612,8 @@
 			(UNSPEC_SME_FMOPA "fmopa")
 			(UNSPEC_SME_FMOPS "fmops")
 			(UNSPEC_SME_FSUB "fsub")
+			(UNSPEC_SME_FTMOPA "ftmopa")
+			(UNSPEC_SME_FTMOPA_FP8 "ftmopa")
 			(UNSPEC_SME_LD1_HOR "ld1_hor")
 			(UNSPEC_SME_LD1_VER "ld1_ver")
 			(UNSPEC_SME_READ_HOR "read_hor")
@@ -4596,6 +4630,8 @@
 			(UNSPEC_SME_SMOPS "smops")
 			(UNSPEC_SME_ST1_HOR "st1_hor")
 			(UNSPEC_SME_ST1_VER "st1_ver")
+			(UNSPEC_SME_STMOPA "stmopa")
+			(UNSPEC_SME_SUTMOPA "sutmopa")
 			(UNSPEC_SME_SUB "sub")
 			(UNSPEC_SME_SUB_WRITE "sub_write")
 			(UNSPEC_SME_SUDOT "sudot")
@@ -4613,11 +4649,13 @@
 			(UNSPEC_SME_UMOPA "umopa")
 			(UNSPEC_SME_UMOPS "umops")
 			(UNSPEC_SME_USDOT "usdot")
+			(UNSPEC_SME_USTMOPA "ustmopa")
 			(UNSPEC_SME_USVDOT "usvdot")
 			(UNSPEC_SME_USMOP4A "usmop4a")
 			(UNSPEC_SME_USMOP4S "usmop4s")
 			(UNSPEC_SME_USMOPA "usmopa")
 			(UNSPEC_SME_USMOPS "usmops")
+			(UNSPEC_SME_UTMOPA "utmopa")
 			(UNSPEC_SME_WRITE_HOR "write_hor")
 			(UNSPEC_SME_WRITE_VER "write_ver")
 			(UNSPEC_SQCADD90 "sqcadd90")

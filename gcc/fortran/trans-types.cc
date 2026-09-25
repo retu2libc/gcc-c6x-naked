@@ -2258,6 +2258,42 @@ gfc_get_array_type_bounds (tree etype, int dimen, int codimen, tree * lbound,
   return fat_type;
 }
 
+
+/* Create and return a zero-rank array descriptor type suitable to hold a scalar
+   value of type SCALAR_TYPE having attributes ATTR.  An array descriptor of the
+   returned type is to be used as implementation detail when a scalar actual
+   argument of type SCALAR_TYPE and having attributes ATTR is associated with an
+   assumed-rank dummy.  */
+
+tree
+gfc_get_scalar_to_descriptor_type (tree scalar_type, symbol_attribute attr)
+{
+  enum gfc_array_kind akind;
+
+  if (attr.pointer)
+    akind = GFC_ARRAY_POINTER_CONT;
+  else if (attr.allocatable)
+    akind = GFC_ARRAY_ALLOCATABLE;
+  else
+    akind = GFC_ARRAY_ASSUMED_SHAPE_CONT;
+
+  if (POINTER_TYPE_P (scalar_type))
+    scalar_type = TREE_TYPE (scalar_type);
+
+  tree *lbound = NULL, *ubound = NULL;
+  int codim = 0;
+  if (TYPE_LANG_SPECIFIC (scalar_type))
+    {
+      struct lang_type *lang_specific = TYPE_LANG_SPECIFIC (scalar_type);
+      codim = lang_specific->corank;
+      lbound = lang_specific->lbound;
+      ubound = lang_specific->ubound;
+    }
+  return gfc_get_array_type_bounds (scalar_type, 0, codim, lbound, ubound, 1,
+				    akind, !(attr.pointer || attr.target));
+}
+
+
 /* Build a pointer type. This function is called from gfc_sym_type().  */
 
 static tree
@@ -3131,8 +3167,9 @@ gfc_get_derived_type (gfc_symbol * derived, int codimen)
       if (class_coarray_flag || !c->backend_decl || c->attr.caf_token)
 	c->backend_decl = field;
 
-      if (c->attr.pointer && (c->attr.dimension || c->attr.codimension)
-	  && !(c->ts.type == BT_DERIVED && strcmp (c->name, "_data") == 0))
+      if ((c->attr.dimension || c->attr.codimension)
+	  && ((derived->attr.is_class && c->attr.class_pointer)
+	      || (!derived->attr.is_class && c->attr.pointer)))
 	GFC_DECL_PTR_ARRAY_P (c->backend_decl) = 1;
     }
 

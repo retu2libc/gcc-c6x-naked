@@ -1,3 +1,31 @@
+2026-09-24  Jakub Jelinek  <jakub@redhat.com>
+
+	* alloc.c (gomp_aligned_alloc): Check for overflows in the
+	_aligned_malloc case and in the last fallback.
+
+2026-09-22  Chung-Lin Tang  <cltang@baylibre.com>
+
+	* testsuite/libgomp.c-c++-common/declare-target-local-1.c: New test.
+	* testsuite/libgomp.c-c++-common/declare-target-local-2.c: New test.
+	* testsuite/libgomp.c-c++-common/declare-target-local-3.c: New test.
+	* testsuite/libgomp.c-c++-common/declare-target-local-4.c: New test.
+	* testsuite/libgomp.fortran/declare-target-local-1.f90: New test.
+
+2026-09-21  Tobias Burnus  <tburnus@baylibre.com>
+
+	* libgomp.texi (OpenMP 5.2 Impl. Status): Mark comma between
+	directive name and first clause as implemented in Fortran.
+
+2026-09-11  Tobias Burnus  <tburnus@baylibre.com>
+
+	* libgomp.texi (omp_control_tool): Add example interface for calling
+	the tool with a passed argument from Fortran
+
+2026-09-10  Tobias Burnus  <tburnus@baylibre.com>
+
+	PR middle-end/127273
+	* testsuite/libgomp.c/usm_env_handling-1-self.c: Remove 'dg-ice'.
+
 2026-09-09  Tobias Burnus  <tburnus@baylibre.com>
 
 	PR middle-end/122205

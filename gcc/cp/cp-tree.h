@@ -644,7 +644,22 @@ extern GTY(()) tree cp_global_trees[CPTI_MAX];
 
      Temporarily, it may be set to a TREE_LIST whose TREE_VALUE is
      the virtual function this one overrides, and whose TREE_CHAIN is
-     the old DECL_VINDEX.  */
+     the old DECL_VINDEX.
+
+   TREE_PRIVATE
+     For CONSTRUCTOR, this is CONSTRUCTOR_IS_PAREN_INIT.
+
+   TREE_PROTECTED
+     For CONSTRUCTOR, this is CONSTRUCTOR_BRACES_ELIDED_P.
+     For IDENTIFIER, this is IDENTIFIER_LAMBDA_P.
+     For AGGR_INIT_EXPR, this is AGGR_INIT_FROM_THUNK_P.
+     For ADDR_EXPR, this is ADDR_EXPR_DENOTES_CALL_P.
+
+   TREE_STATIC
+     For AGGR_INIT_EXPR, this is AGGR_INIT_EXPR_MUST_TAIL.
+
+   TREE_DEPRECATED
+     For CONSTRUCTOR, this is CONSTRUCTOR_OMITTED_NOT_WITHIN_LIFETIME_P.  */
 
 /* Language-specific tree checkers.  */
 
@@ -1909,7 +1924,8 @@ struct GTY(()) tree_requires_expr {
   (((struct tree_requires_expr *) REQUIRES_EXPR_CHECK (NODE))->loc)
 
 /* True iff TYPE is cv decltype(^^int).  */
-#define REFLECTION_TYPE_P(TYPE) (TREE_CODE (TYPE) == META_TYPE)
+#define REFLECTION_TYPE_P(TYPE) \
+  (TYPE_P (TYPE) && TYPE_MAIN_VARIANT (TYPE) == meta_info_type_node)
 
 /* True if NODE is a REFLECT_EXPR.  */
 #define REFLECT_EXPR_P(NODE) (TREE_CODE (NODE) == REFLECT_EXPR)
@@ -5099,6 +5115,10 @@ get_vec_init_expr (tree t)
 #define CONSTRUCTOR_BRACES_ELIDED_P(NODE) \
   (CONSTRUCTOR_CHECK (NODE)->base.protected_flag)
 
+/* True if omitted fields are considered to be not within lifetime.  */
+#define CONSTRUCTOR_OMITTED_NOT_WITHIN_LIFETIME_P(NODE) \
+  (CONSTRUCTOR_CHECK (NODE)->base.deprecated_flag)
+
 /* True if NODE represents a conversion for direct-initialization in a
    template.  Set by perform_implicit_conversion_flags.  */
 #define IMPLICIT_CONV_EXPR_DIRECT_INIT(NODE) \
@@ -7231,6 +7251,7 @@ enum cp_built_in_function {
   CP_BUILT_IN_CURRENT_EXCEPTION,
   CP_BUILT_IN_UNCAUGHT_EXCEPTIONS,
   CP_BUILT_IN_IS_WITHIN_LIFETIME,
+  CP_BUILT_IN_START_LIFETIME,
   CP_BUILT_IN_LAST
 };
 
@@ -9432,7 +9453,7 @@ extern tree fold_non_dependent_init		(tree,
 						 bool = false, tree = NULL_TREE);
 extern tree fold_simple				(tree);
 extern tree fold_to_constant			(tree);
-extern bool reduced_constant_expression_p       (tree, tree = NULL_TREE);
+extern bool reduced_constant_expression_p       (tree, tree = NULL_TREE, bool = false);
 extern bool is_instantiation_of_constexpr       (tree);
 extern bool var_in_constexpr_fn                 (tree);
 extern bool var_in_maybe_constexpr_fn           (tree);
@@ -9524,9 +9545,10 @@ extern tree process_metafunction (const constexpr_ctx *, tree, tree,
 extern tree get_reflection (location_t, tree, reflect_kind = REFLECT_UNDEF);
 extern tree get_null_reflection () ATTRIBUTE_PURE;
 extern bool null_reflection_p (const_tree) ATTRIBUTE_PURE;
+extern void rewrite_null_reflection (tree &);
 extern tree splice (tree);
 extern bool check_out_of_consteval_use (tree, bool = true);
-extern bool consteval_only_p (tree) ATTRIBUTE_PURE;
+extern bool consteval_only_p (tree);
 extern bool compare_reflections (tree, tree) ATTRIBUTE_PURE;
 extern bool valid_splice_type_p (const_tree) ATTRIBUTE_PURE;
 extern bool valid_splice_scope_p (const_tree) ATTRIBUTE_PURE;
@@ -9537,7 +9559,6 @@ extern bool check_splice_expr (location_t, location_t, tree, bool, bool, bool,
 extern tree make_splice_scope (tree, bool);
 extern bool dependent_splice_p (const_tree) ATTRIBUTE_PURE;
 extern tree reflection_mangle_prefix (tree, char [3]);
-extern void check_consteval_only_fn (tree);
 extern bool reflection_function_template_p (const_tree) ATTRIBUTE_PURE;
 extern void dump_data_member_spec (pretty_printer *, tree);
 

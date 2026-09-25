@@ -260,7 +260,7 @@ ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EXEEXT = @EXEEXT@
 FGREP = @FGREP@
-GLIBCXX_LIBS = @GLIBCXX_LIBS@
+GLIBGM2_LIBS = @GLIBGM2_LIBS@
 GM2_FOR_TARGET = @GM2_FOR_TARGET@
 GREP = @GREP@
 INSTALL = @INSTALL@
@@ -333,8 +333,8 @@ enable_shared = @enable_shared@
 enable_static = @enable_static@
 exec_prefix = @exec_prefix@
 get_gcc_base_ver = @get_gcc_base_ver@
-glibcxx_builddir = @glibcxx_builddir@
-glibcxx_srcdir = @glibcxx_srcdir@
+glibgm2_builddir = @glibgm2_builddir@
+glibgm2_srcdir = @glibgm2_srcdir@
 host = @host@
 host_alias = @host_alias@
 host_cpu = @host_cpu@
@@ -779,9 +779,9 @@ libc.o: $(GM2_SRC)/gm2-libs-min/libc.c
 @HAVE_PYTHON_INTERPRETER_TRUE@             -D=$(GM2_SRC)/gm2-libs-min/SYSTEM.def \
 @HAVE_PYTHON_INTERPRETER_TRUE@             -M=$(GM2_SRC)/gm2-libs-min/SYSTEM.mod \
 @HAVE_PYTHON_INTERPRETER_TRUE@             -I=$(GM2_SRC)/gm2-libs-min -I=$(GM2_SRC)/gm2-libs \
-@HAVE_PYTHON_INTERPRETER_TRUE@             -C="$(GM2_FOR_TARGET_ESC) -fno-exceptions" -o $@
+@HAVE_PYTHON_INTERPRETER_TRUE@             -C="$(GM2_FOR_TARGET) -fno-exceptions" -o $@
 @HAVE_PYTHON_INTERPRETER_FALSE@SYSTEM.def: Makefile
-@HAVE_PYTHON_INTERPRETER_FALSE@	bash $(GM2_SRC)/tools-src/makeSystem -fpim \
+@HAVE_PYTHON_INTERPRETER_FALSE@	$(SHELL) $(GM2_SRC)/tools-src/makeSystem -fpim \
 @HAVE_PYTHON_INTERPRETER_FALSE@             $(GM2_SRC)/gm2-libs-min/SYSTEM.def \
 @HAVE_PYTHON_INTERPRETER_FALSE@             $(GM2_SRC)/gm2-libs-min/SYSTEM.mod \
 @HAVE_PYTHON_INTERPRETER_FALSE@             -I$(GM2_SRC)/gm2-libs-min -I$(GM2_SRC)/gm2-libs \

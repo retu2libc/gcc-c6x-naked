@@ -773,7 +773,6 @@ reduce_declarers (NODE_T *p, enum a68_attribute expect)
       reduce (q, NO_NOTE, NO_TICK, INDICANT, REAL_SYMBOL, STOP);
       reduce (q, NO_NOTE, NO_TICK, INDICANT, BITS_SYMBOL, STOP);
       reduce (q, NO_NOTE, NO_TICK, INDICANT, BYTES_SYMBOL, STOP);
-      reduce (q, NO_NOTE, NO_TICK, INDICANT, COMPLEX_SYMBOL, STOP);
       reduce (q, NO_NOTE, NO_TICK, INDICANT, COMPL_SYMBOL, STOP);
       reduce (q, NO_NOTE, NO_TICK, INDICANT, BOOL_SYMBOL, STOP);
       reduce (q, NO_NOTE, NO_TICK, INDICANT, CHAR_SYMBOL, STOP);
@@ -801,8 +800,7 @@ reduce_declarers (NODE_T *p, enum a68_attribute expect)
 	      a = ATTRIBUTE (SUB_NEXT (q));
 
 	      if (a == INT_SYMBOL || a == REAL_SYMBOL || a == BITS_SYMBOL
-		  || a == BYTES_SYMBOL || a == COMPLEX_SYMBOL
-		  || a == COMPL_SYMBOL)
+		  || a == BYTES_SYMBOL || a == COMPL_SYMBOL)
 		{
 		  reduce (q, NO_NOTE, NO_TICK, DECLARER, LONGETY, INDICANT, STOP);
 		}
@@ -826,14 +824,14 @@ reduce_declarers (NODE_T *p, enum a68_attribute expect)
 	    {
 	      a = ATTRIBUTE (SUB_NEXT (q));
 	      if (a == INT_SYMBOL || a == REAL_SYMBOL || a == BITS_SYMBOL
-		  || a == BYTES_SYMBOL || a == COMPLEX_SYMBOL || a == COMPL_SYMBOL)
+		  || a == BYTES_SYMBOL || a == COMPL_SYMBOL)
 		{
 		  reduce (q, NO_NOTE, NO_TICK, DECLARER, SHORTETY, INDICANT, STOP);
 		}
 	      else
 		{
 		  a68_error (NEXT (q), "appropriate declarer expected");
-		  reduce (q, NO_NOTE, NO_TICK, DECLARER, LONGETY, INDICANT, STOP);
+		  reduce (q, NO_NOTE, NO_TICK, DECLARER, SHORTETY, INDICANT, STOP);
 		}
 	    }
 	}
@@ -2416,6 +2414,7 @@ reduce_enquiry_clauses (NODE_T *p)
 		      ENQUIRY_CLAUSE, ENQUIRY_CLAUSE, SEMI_SYMBOL, UNIT, STOP);
 	      reduce (q, NO_NOTE, &siga,
 		      INITIALISER_SERIES, ENQUIRY_CLAUSE, SEMI_SYMBOL, DECLARATION_LIST, STOP);
+	      /* Errors  */
 	      reduce (q, strange_separator, &siga,
 		      ENQUIRY_CLAUSE, ENQUIRY_CLAUSE, COMMA_SYMBOL, UNIT, STOP);
 	      reduce (q, strange_separator, &siga,
@@ -2435,6 +2434,7 @@ reduce_enquiry_clauses (NODE_T *p)
 		      ENQUIRY_CLAUSE, INITIALISER_SERIES, SEMI_SYMBOL, UNIT, STOP);
 	      reduce (q, NO_NOTE, &siga,
 		      INITIALISER_SERIES, INITIALISER_SERIES, SEMI_SYMBOL, DECLARATION_LIST, STOP);
+	      /* Errors  */
 	      reduce (q, strange_separator, &siga,
 		      ENQUIRY_CLAUSE, INITIALISER_SERIES, COMMA_SYMBOL, UNIT, STOP);
 	      reduce (q, strange_separator, &siga,

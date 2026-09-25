@@ -2996,20 +2996,19 @@ aarch64_regmode_natural_size (machine_mode mode)
   /* The natural size for SVE data modes is one SVE data vector,
      and similarly for predicates.  We can't independently modify
      anything smaller than that.  */
-  /* ??? For now, only do this for variable-width SVE registers.
-     Doing it for constant-sized registers breaks lower-subreg.cc.  */
-  /* ??? And once that's fixed, we should probably have similar
-     code for Advanced SIMD.  */
-  if (!aarch64_sve_vg.is_constant ())
+  if (VECTOR_MODE_P (mode))
     {
-      /* REGMODE_NATURAL_SIZE influences general subreg validity rules,
-	 so we need to handle memory-only modes as well.  */
       unsigned int vec_flags = aarch64_classify_vector_memory_mode (mode);
       if (vec_flags & VEC_SVE_PRED)
 	return BYTES_PER_SVE_PRED;
       if (vec_flags & VEC_SVE_DATA)
 	return BYTES_PER_SVE_VECTOR;
+      if (vec_flags & VEC_ADVSIMD)
+	return MAX (exact_div (GET_MODE_SIZE (mode),
+			       aarch64_ldn_stn_vectors (mode)).to_constant (),
+		    UNITS_PER_WORD);
     }
+
   return UNITS_PER_WORD;
 }
 
@@ -18448,6 +18447,75 @@ aarch64_sve_adjust_stmt_cost (class vec_info *vinfo, vect_cost_for_stmt kind,
   return stmt_cost;
 }
 
+/* Return > 0 if STMT_INFO is the instruction requires additional costing.  The
+   instruction is evaluated as being vectorized as VECTYPE and the return value
+   should be the additional number of instructions that need to be costed.  */
+static unsigned int
+aarch64_ifn_vect_stmt_p (stmt_vec_info stmt_info, tree vectype)
+{
+  stmt_info = vect_stmt_to_vectorize (stmt_info);
+  gcall *call = dyn_cast<gcall *> (STMT_VINFO_STMT (stmt_info));
+  if (!vectype)
+    return 0;
+
+  gassign *assign = dyn_cast <gassign *> (STMT_VINFO_STMT (stmt_info));
+  if (!call && !assign)
+    return 0;
+
+  auto vec_flags = aarch64_classify_vector_mode (TYPE_MODE (vectype));
+  bool advsimd_p = vec_flags & VEC_ADVSIMD;
+  bool is_128bit_p = known_eq (GET_MODE_BITSIZE (TYPE_MODE (vectype)), 128);
+  if (assign)
+    {
+      switch (gimple_assign_rhs_code (assign))
+      {
+	/* SAD for Adv. SIMD is emulated using two instuctions per 64-bit
+	   quantities.  So 128-bit ADB requires 4 INSN.  Account for that.  */
+	case SAD_EXPR:
+	  return advsimd_p && is_128bit_p ? 2 : 0;
+	case WIDEN_SUM_EXPR:
+	  {
+	    tree rhs = gimple_assign_rhs1 (assign);
+	    if (!advsimd_p
+		|| TARGET_DOTPROD
+		|| !vect_is_reduction (stmt_info)
+		|| TREE_CODE (rhs) != SSA_NAME)
+	      return 0;
+
+	    gimple *def_stmt = SSA_NAME_DEF_STMT (rhs);
+	    gassign *def_assign = dyn_cast<gassign *> (def_stmt);
+	    if (def_assign
+		&& CONVERT_EXPR_CODE_P (gimple_assign_rhs_code (def_assign))
+		&& TREE_CODE (gimple_assign_rhs1 (def_assign)) == SSA_NAME)
+	      def_stmt = SSA_NAME_DEF_STMT (gimple_assign_rhs1 (def_assign));
+
+	    gcall *def = dyn_cast<gcall *> (def_stmt);
+	    if (!def || gimple_call_combined_fn (def) != CFN_ABD)
+	      return 0;
+
+	    for (unsigned int i = 0; i < 2; ++i)
+	      {
+		tree arg = gimple_call_arg (def, i);
+		if (TREE_CODE (arg) != SSA_NAME
+		    || !gimple_assign_load_p (SSA_NAME_DEF_STMT (arg)))
+		  return 0;
+	      }
+	    return 2;
+	  }
+	default:
+	  break;
+      }
+      return 0;
+    }
+
+  switch (gimple_call_combined_fn (call))
+  {
+    default:
+      break;
+    }
+  return 0;
+}
+
 /* STMT_COST is the cost calculated for STMT_INFO, which has cost kind KIND
    and which when vectorized would operate on vector type VECTYPE.  Add the
    cost of any embedded operations.  */
@@ -18572,6 +18640,13 @@ aarch64_vector_costs::count_ops (unsigned int count, vect_cost_for_stmt kind,
       if (aarch64_bool_compound_p (m_vinfo, stmt_info, node, m_vec_flags))
 	return;
     }
+
+  unsigned int n_insn = 0;
+  if (stmt_info
+      && kind == vector_stmt
+      && (n_insn = aarch64_ifn_vect_stmt_p (stmt_info,
+					    STMT_VINFO_VECTYPE (stmt_info))))
+    ops->general_ops += n_insn * count;
 
   /* Detect the case where we are using an emulated gather/scatter.  When a
      target does not support gathers and scatters directly the vectorizer
@@ -18987,6 +19062,29 @@ aarch64_external_adjust_stmt_cost (vect_cost_for_stmt kind, slp_tree node,
   return stmt_cost;
 }
 
+/* Get the effecive VF to use for the loop in LOOP_VINFO.  This is the VF that
+   should be used for costing purposes only.  */
+static inline unsigned int
+aarch64_vect_vf_for_cost (loop_vec_info loop_vinfo)
+{
+  unsigned int estimated_vf = vect_vf_for_cost (loop_vinfo);
+
+  /* If we know we have a single partial vector iteration, cap the VF
+     to the number of scalar iterations for costing purposes.  */
+  if (LOOP_VINFO_NITERS_KNOWN_P (loop_vinfo))
+    {
+      auto niters = LOOP_VINFO_INT_NITERS (loop_vinfo);
+      if (niters < estimated_vf && dump_enabled_p ())
+	dump_printf_loc (MSG_NOTE, vect_location,
+			 "Scalar loop iterates at most %wd times.  Capping VF "
+			 " from %d to %wd\n", niters, estimated_vf, niters);
+
+      estimated_vf = MIN (estimated_vf, niters);
+    }
+
+  return estimated_vf;
+}
+
 unsigned
 aarch64_vector_costs::add_stmt_cost (int count, vect_cost_for_stmt kind,
 				     stmt_vec_info stmt_info, slp_tree node,
@@ -19131,6 +19229,14 @@ aarch64_vector_costs::add_stmt_cost (int count, vect_cost_for_stmt kind,
 	 to the base cost calculated above.  */
       stmt_cost = aarch64_adjust_stmt_cost (m_vinfo, kind, stmt_info, node,
 					    vectype, m_vec_flags, stmt_cost);
+      unsigned int n_insn = 0;
+      if (vectype
+	  && kind == vector_stmt
+	  && (n_insn = aarch64_ifn_vect_stmt_p (stmt_info, vectype)))
+	{
+	  const simd_vec_cost *simd_costs = aarch64_simd_vec_costs (vectype);
+	  stmt_cost += count * n_insn * simd_costs->int_stmt_cost;
+	}
 
       /* If we're applying the SVE vs. Advanced SIMD unrolling heuristic,
 	 estimate the number of statements in the unrolled Advanced SIMD
@@ -19350,26 +19456,13 @@ adjust_body_cost (loop_vec_info loop_vinfo,
 
   const auto &scalar_ops = scalar_costs->m_ops[0];
   const auto &vector_ops = m_ops[0];
-  unsigned int estimated_vf = vect_vf_for_cost (loop_vinfo);
+  unsigned int estimated_vf = aarch64_vect_vf_for_cost (loop_vinfo);
   unsigned int orig_body_cost = body_cost;
   bool should_disparage = false;
 
   if (dump_enabled_p ())
     dump_printf_loc (MSG_NOTE, vect_location,
 		     "Original vector body cost = %d\n", body_cost);
-
-  /* If we know we have a single partial vector iteration, cap the VF
-     to the number of scalar iterations for costing purposes.  */
-  if (LOOP_VINFO_NITERS_KNOWN_P (loop_vinfo))
-    {
-      auto niters = LOOP_VINFO_INT_NITERS (loop_vinfo);
-      if (niters < estimated_vf && dump_enabled_p ())
-	dump_printf_loc (MSG_NOTE, vect_location,
-			 "Scalar loop iterates at most %wd times.  Capping VF "
-			 " from %d to %wd\n", niters, estimated_vf, niters);
-
-      estimated_vf = MIN (estimated_vf, niters);
-    }
 
   fractional_cost scalar_cycles_per_iter
     = scalar_ops.min_cycles_per_iter () * estimated_vf;
@@ -19562,14 +19655,16 @@ better_main_loop_than_p (const vector_costs *uncast_other) const
 
   auto this_loop_vinfo = as_a<loop_vec_info> (this->m_vinfo);
   auto other_loop_vinfo = as_a<loop_vec_info> (other->m_vinfo);
+  auto this_loop_vf = aarch64_vect_vf_for_cost (this_loop_vinfo);
+  auto other_loop_vf = aarch64_vect_vf_for_cost (other_loop_vinfo);
 
   if (dump_enabled_p ())
     dump_printf_loc (MSG_NOTE, vect_location,
 		     "Comparing two main loops (%s at VF %d vs %s at VF %d)\n",
 		     GET_MODE_NAME (this_loop_vinfo->vector_mode),
-		     vect_vf_for_cost (this_loop_vinfo),
+		     this_loop_vf,
 		     GET_MODE_NAME (other_loop_vinfo->vector_mode),
-		     vect_vf_for_cost (other_loop_vinfo));
+		     other_loop_vf);
 
   /* Apply the unrolling heuristic described above
      m_unrolled_advsimd_niters.  */
@@ -19605,10 +19700,8 @@ better_main_loop_than_p (const vector_costs *uncast_other) const
 	  other->m_ops[i].dump ();
 	}
 
-      auto this_estimated_vf = (vect_vf_for_cost (this_loop_vinfo)
-				* this->m_ops[i].vf_factor ());
-      auto other_estimated_vf = (vect_vf_for_cost (other_loop_vinfo)
-				 * other->m_ops[i].vf_factor ());
+      auto this_estimated_vf = (this_loop_vf * this->m_ops[i].vf_factor ());
+      auto other_estimated_vf = (other_loop_vf * other->m_ops[i].vf_factor ());
 
       /* If it appears that one loop could process the same amount of data
 	 in fewer cycles, prefer that loop over the other one.  */
@@ -19988,6 +20081,15 @@ aarch64_override_options_after_change_1 (struct gcc_options *opts)
      intermediary step for the former.  */
   if (flag_mlow_precision_sqrt)
     flag_mrecip_low_precision_sqrt = true;
+
+  /* Turn off outline atomics with -mcmodel=large.  */
+  if (aarch64_cmodel == AARCH64_CMODEL_LARGE)
+    {
+      if (!TARGET_LSE && opts->x_aarch64_flag_outline_atomics == 1)
+	warning (OPT_moutline_atomics,
+		 "%<-mcmodel=large%> implies %<-mno-outline-atomics%>");
+      opts->x_aarch64_flag_outline_atomics = 0;
+    }
 }
 
 /* 'Unpack' up the internal tuning structs and update the options
@@ -28416,11 +28518,11 @@ aarch64_evpc_rev64_ext (struct expand_vec_perm_d *d)
   if (!d->perm.series_p (0, 1, nelt - 1, -1))
     return false;
 
-  if (is_bb_in_loop (gimple_bb (currently_expanding_gimple_stmt)))
-    return false;
-
   if (d->testing_p)
     return true;
+
+  if (is_bb_in_loop (gimple_bb (currently_expanding_gimple_stmt)))
+    return false;
 
   rtx tmp1 = gen_reg_rtx (d->vmode);
   rtx tmp2 = gen_reg_rtx (V16QImode);

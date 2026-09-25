@@ -12092,15 +12092,14 @@ ix86_memory_address_reg_class (rtx_insn* insn)
 
   /* Try to recognize the insn before calling get_attr_addr.
      Save current recog_data and current alternative.  */
-  struct recog_data_d saved_recog_data = recog_data;
-  int saved_alternative = which_alternative;
+  recog_state_saver recog_save;
 
   /* Update recog_data for processing of alternatives.  */
   extract_insn_cached (insn);
 
   /* If current alternative is not set, loop through enabled
      alternatives and get the most limited register class.  */
-  if (saved_alternative == -1)
+  if (recog_save.saved_alternative == -1)
     {
       alternative_mask enabled = get_enabled_alternatives (insn);
 
@@ -12115,20 +12114,23 @@ ix86_memory_address_reg_class (rtx_insn* insn)
     }
   else
     {
-      which_alternative = saved_alternative;
+      which_alternative = recog_save.saved_alternative;
       addr_rclass = get_attr_addr (insn);
     }
-
-  recog_data = saved_recog_data;
-  which_alternative = saved_alternative;
 
   return addr_rclass;
 }
 
-/* Return memory address register class insn can use.  */
+/* Implement TARGET_BASE_REG_CLASS.
 
-enum reg_class
-ix86_insn_base_reg_class (rtx_insn* insn)
+   Return memory address register class INSN can use.  MODE, AS, OUTER_CODE,
+   INDEX_CODE and MEM are unused: the EGPR-encoding restriction this
+   implements depends only on the instruction, not on the particular address
+   being formed.  */
+
+static reg_class_t
+ix86_base_reg_class (machine_mode, addr_space_t, enum rtx_code, enum rtx_code,
+		     rtx, rtx_insn *insn)
 {
   switch (ix86_memory_address_reg_class (insn))
     {
@@ -14489,7 +14491,7 @@ ix86_print_operand (FILE *file, rtx x, int code)
 	    case UNEQ:
 	      if (TARGET_AVX)
 		{
-		  fputs ("eq_us", file);
+		  fputs ("eq_uq", file);
 		  break;
 		}
 	     /* FALLTHRU */
@@ -14499,7 +14501,7 @@ ix86_print_operand (FILE *file, rtx x, int code)
 	    case UNLT:
 	      if (TARGET_AVX)
 		{
-		  fputs ("nge", file);
+		  fputs ("nge_uq", file);
 		  break;
 		}
 	     /* FALLTHRU */
@@ -14509,7 +14511,7 @@ ix86_print_operand (FILE *file, rtx x, int code)
 	    case UNLE:
 	      if (TARGET_AVX)
 		{
-		  fputs ("ngt", file);
+		  fputs ("ngt_uq", file);
 		  break;
 		}
 	     /* FALLTHRU */
@@ -14537,7 +14539,8 @@ ix86_print_operand (FILE *file, rtx x, int code)
 		}
 	     /* FALLTHRU */
 	    case UNGE:
-	      fputs ("nlt", file);
+	      /* Only AVX has the quiet form.  */
+	      fputs (TARGET_AVX ? "nlt_uq" : "nlt", file);
 	      break;
 	    case GT:
 	      if (TARGET_AVX)
@@ -14547,7 +14550,7 @@ ix86_print_operand (FILE *file, rtx x, int code)
 		}
 	     /* FALLTHRU */
 	    case UNGT:
-	      fputs ("nle", file);
+	      fputs (TARGET_AVX ? "nle_uq" : "nle", file);
 	      break;
 	    case ORDERED:
 	      fputs ("ord", file);
@@ -16517,15 +16520,13 @@ ix86_lea_outperforms (rtx_insn *insn, unsigned int regno0, unsigned int regno1,
       return true;
     }
 
-  /* Remember recog_data content.  */
-  struct recog_data_d recog_data_save = recog_data;
-
-  dist_define = distance_non_agu_define (regno1, regno2, insn);
-  dist_use = distance_agu_use (regno0, insn);
-
   /* distance_non_agu_define can call get_attr_type which can call
      recog_memoized, restore recog_data back to previous content.  */
-  recog_data = recog_data_save;
+  {
+    recog_state_saver recog_save;
+    dist_define = distance_non_agu_define (regno1, regno2, insn);
+    dist_use = distance_agu_use (regno0, insn);
+  }
 
   if (dist_define < 0 || dist_define >= LEA_MAX_STALL)
     {
@@ -21435,6 +21436,11 @@ inline_secondary_memory_needed (machine_mode mode, reg_class_t class1,
 	  && (TARGET_64BIT ? mode == TImode : mode == DImode))
 	return false;
 
+      /* Moves from SSE_REGS to GENERAL_REGS need only SSE2:
+	 *movti_internal splits them into movq + shufpd + movq.  */
+      if (TARGET_64BIT && mode == TImode && SSE_CLASS_P (class1))
+	return false;
+
       int msize = GET_MODE_SIZE (mode);
 
       /* Between SSE and general, we have moves no larger than word size.  */
@@ -25088,7 +25094,17 @@ ix86_split_stlf_stall_load ()
 	     register.  */
 	  || GET_MODE (src) != E_V2DFmode
 	  || !MEM_EXPR (src)
-	  || TREE_CODE (get_base_address (MEM_EXPR (src))) != PARM_DECL)
+	  || TREE_CODE (get_base_address (MEM_EXPR (src))) != PARM_DECL
+	  /* Avoid invalid memory address.
+	     i.e.
+	     (mem/c:V2DF (plus:DI (reg/f:DI 7 sp)
+				  (const_int 2147483640 [0x7ffffff8])))
+	     Adjusting it by 8 puts the displacement at 0x80000000, out of
+	     range for the signed 32-bit field an x86 address can encode.  */
+	  || !memory_address_addr_space_p (DFmode,
+					   XEXP (adjust_address_nv (src, DFmode,
+								    8), 0),
+					   MEM_ADDR_SPACE (src)))
 	continue;
 
       rtx zero = CONST0_RTX (V2DFmode);
@@ -26029,7 +26045,12 @@ ix86_default_vector_cost (enum vect_cost_for_stmt type_of_cost,
         return COSTS_N_INSNS (ix86_cost->sse_store[index]) / 2;
 
       case vec_to_scalar:
+	/* This is a lane extraction, possibly from lane zero.  */
+	return (ix86_vec_cost (mode, ix86_cost->sse_op)
+		+ (fp ? 0 : COSTS_N_INSNS (ix86_cost->sse_to_integer) / 2));
+
       case scalar_to_vec:
+	/* This is always a full splat from scalar, not a lane insertion.  */
         return ix86_vec_cost (mode, ix86_cost->sse_op);
 
       /* We should have separate costs for unaligned loads and gather/scatter.
@@ -29078,6 +29099,9 @@ ix86_libgcc_floating_mode_supported_p
 
 #undef TARGET_CLASS_MAX_NREGS
 #define TARGET_CLASS_MAX_NREGS ix86_class_max_nregs
+
+#undef TARGET_BASE_REG_CLASS
+#define TARGET_BASE_REG_CLASS ix86_base_reg_class
 
 #undef TARGET_PREFERRED_RELOAD_CLASS
 #define TARGET_PREFERRED_RELOAD_CLASS ix86_preferred_reload_class

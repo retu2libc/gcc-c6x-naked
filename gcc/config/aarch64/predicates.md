@@ -20,6 +20,13 @@
 
 (include "../arm/common.md")
 
+;; Similar to register_operand, but don't allow subregs.  This is needed
+;; if we want to use operations like gen_highpart while expanding
+;; a pattern.
+(define_predicate "pure_register_operand"
+  (and (match_code "reg")
+       (match_operand 0 "register_operand")))
+
 (define_predicate "aarch64_sysreg_string"
   (and (match_code "const_string")
        (match_test "aarch64_valid_sysreg_name_p (XSTR (op, 0))")))
@@ -280,11 +287,16 @@
   (ior (match_operand 0 "register_operand")
        (match_operand 0 "aarch64_shift_imm_di")))
 
-;; The imm3 field is a 3-bit field that only accepts immediates in the
+;; The aarch64_shift_imm3 field is a 3-bit field that only accepts immediates in the
 ;; range 0..4.
-(define_predicate "aarch64_imm3"
+(define_predicate "aarch64_shift_imm3"
   (and (match_code "const_int")
        (match_test "UINTVAL (op) <= 4")))
+
+;; The imm1 field is a 1-bit field that only accepts immediates 0 and 1.
+(define_predicate "aarch64_imm1"
+  (and (match_code "const_int")
+       (match_test "UINTVAL (op) <= 1")))
 
 ;; The imm2 field is a 2-bit field that only accepts immediates in the
 ;; range 0..3.
@@ -294,9 +306,15 @@
 
 ;; The imm3 field is a 3-bit field that only accepts immediates in the
 ;; range 0..7.
-(define_predicate "aarch64_lane_imm3"
+(define_predicate "aarch64_imm3"
   (and (match_code "const_int")
        (match_test "UINTVAL (op) <= 7")))
+
+;; The imm4 field is a 4-bit field that only accepts immediates in the
+;; range 0..15.
+(define_predicate "aarch64_imm4"
+  (and (match_code "const_int")
+       (match_test "UINTVAL (op) <= 15")))
 
 ;; An immediate that fits into 24 bits, but needs splitting.
 (define_predicate "aarch64_split_imm24"

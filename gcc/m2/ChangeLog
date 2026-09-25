@@ -1,3 +1,125 @@
+2026-09-22  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	PR modula2/127554
+	* gm2-compiler/M2MetaError.mod (SpellHint): Allow error symbols to
+	be spell checked.
+	* gm2-compiler/M2Quads.mod (BuildConstructor): Generate a spelling
+	hint error message if the name is set and an error is seen.
+	(PopTntok): New procedure.
+	* gm2-compiler/PCBuild.bnf (CreateQualident): New procedure.
+	(PushQualident): Reimplement.
+	* gm2-compiler/PCSymBuild.mod (PCStartBuildDefModule): Push
+	module to spelling stack.
+	(PCStartBuildImpModule): Ditto.
+	(PCStartBuildInnerModule): Ditto.
+	(PCEndBuildDefModule): Pop top of spell stack.
+	(PCEndBuildImpModule): Ditto.
+	(PCEndBuildProgModule): Ditto.
+	(PCEndBuildInnerModule): Ditto.
+	(PCEndBuildProcedure): Ditto.
+	(PCBuildProcedureHeading): Ditto.
+	(PCEndBuildForward): Reimplement.
+
+2026-09-21  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	PR modula2/127469
+	* gm2-compiler/M2Quads.mod (BuildConstructor): Check for
+	tok UnknownTokenNo and if not equal generate an error message
+	at tok stating the type is unknown.
+	* gm2-compiler/PCSymBuild.mod (WalkConvert): Check totype for
+	NulSym and if so return FALSE.
+
+2026-09-17  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	PR modula2/126174
+	* Make-lang.in (m2/gm2-libs.texi): Add test for
+	m2/gm2-libs-pim-common and create if necessary.
+	Add test for m2/gm2-libs-iso-common and create if necessary.
+	Add test for m2/gm2-libs-cor-common and create if necessary.
+	* tools-src/def2doc.py (Base_Libs): Change section heading name.
+	(library_classifications): Add PIM_Common, ISO_Common and
+	COR_Common.
+	(PIM_Common): New list.
+	(ISO_Common): New list.
+	(COR_Common): New list.
+	* gm2-libs-cor-common/README.texi: New file.
+	* gm2-libs-iso-common/README.texi: New file.
+	* gm2-libs-pim-common/README.texi: New file.
+
+2026-09-16  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	PR modula2/127359
+	* tools-src/makeSystem: Replace echo with printf equivalent.
+
+2026-09-11  Gaius Mulley  <gaiusmod2@gmail.com>
+
+	* gm2-gcc/m2builtins.cc (define_builtin): Reimplement.
+	(do_define_builtin): New function.
+	(data_type_supported): Ditto.
+	(param_data_type_supported): Ditto.
+	(dump_builtin): Call dump_available if
+	param_data_type_supported.
+	* gm2-libs-iso-common/ComplexMath.def (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-iso-common/ComplexMath.mod (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-iso-common/LongComplexMath.def (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-iso-common/LongComplexMath.mod (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-iso-common/ShortComplexMath.def (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-iso-common/ShortComplexMath.mod (arcsin): Replace
+	with template tag.
+	(arccos): Ditto.
+	(arctan): Ditto.
+	* gm2-libs-pim-common/Builtins.def (carcsinf): Replace
+	with template tag.
+	(carcsin): Ditto.
+	(carcsinl): Ditto.
+	(carccosf): Ditto.
+	(carccos): Ditto.
+	(carccosl): Ditto.
+	(carctanf): Ditto.
+	(carctan): Ditto.
+	(carctanl): Ditto.
+	* gm2-libs-pim-common/Builtins.mod: (carcsinf): Replace
+	with template tag.
+	(carcsin): Ditto.
+	(carcsinl): Ditto.
+	(carccosf): Ditto.
+	(carccos): Ditto.
+	(carccosl): Ditto.
+	(carctanf): Ditto.
+	(carctan): Ditto.
+	(carctanl): Ditto.
+	* gm2-libs-pim-common/cbuiltin.def (casinf): Replace
+	with template tag.
+	(casin): Ditto.
+	(casinl): Ditto.
+	(cacosf): Ditto.
+	(cacos): Ditto.
+	(cacosl): Ditto.
+	(catanf): Ditto.
+	(catan): Ditto.
+	(catanl): Ditto.
+	* gm2spec.cc (lang_specific_driver): Comment formatting.
+	* tools-src/mktargetsrc.py (do_output_mod_builtin): New
+	function.
+	(output_mod_builtin): Ditto.
+	(list_of_builtins): Add casin, casinf, casinl, cacos, cacosf,
+	cacosl, catan, catanf and catanl.
+
 2026-09-07  Gaius Mulley  <gaiusmod2@gmail.com>
 
 	PR modula2/126847

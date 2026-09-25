@@ -198,6 +198,7 @@ vect_is_simple_iv_evolution (unsigned loop_nb, tree access_fn,
 
   STMT_VINFO_LOOP_PHI_EVOLUTION_BASE_UNCHANGED (stmt_info) = init_expr;
   STMT_VINFO_LOOP_PHI_EVOLUTION_PART (stmt_info) = step_expr;
+  STMT_VINFO_LOOP_PHI_EVOLUTION_TYPE (stmt_info) = vect_step_op_add;
 
   if (TREE_CODE (step_expr) != INTEGER_CST
       && (TREE_CODE (step_expr) != SSA_NAME
@@ -5041,6 +5042,7 @@ get_initial_defs_for_reduction (loop_vec_info loop_vinfo,
 vect_reduc_info
 info_for_reduction (loop_vec_info loop_vinfo, slp_tree node)
 {
+  gcc_assert (node);
   if (node->cycle_info.id == -1)
     return NULL;
   return loop_vinfo->reduc_infos[node->cycle_info.id];
@@ -6591,7 +6593,7 @@ vectorize_fold_left_reduction (loop_vec_info loop_vinfo,
 
 /* Function is_nonwrapping_integer_induction.
 
-   Check if STMT_VINO (which is part of loop LOOP) both increments and
+   Check if STMT_VINFO (which is part of loop LOOP) both increments and
    does not cause overflow.  */
 
 static bool
@@ -6603,6 +6605,10 @@ is_nonwrapping_integer_induction (stmt_vec_info stmt_vinfo, class loop *loop)
   tree lhs_type = TREE_TYPE (gimple_phi_result (phi));
   widest_int ni, max_loop_value, lhs_max;
   wi::overflow_type overflow = wi::OVF_NONE;
+
+  /* Make sure this is a regular induction.  */
+  if (STMT_VINFO_LOOP_PHI_EVOLUTION_TYPE (stmt_vinfo) != vect_step_op_add)
+    return false;
 
   /* Make sure the loop is integer based.  */
   if (TREE_CODE (base) != INTEGER_CST
@@ -6866,25 +6872,6 @@ vectorizable_lane_reducing (loop_vec_info loop_vinfo, stmt_vec_info stmt_info,
     }
   gcc_assert (ncopies_for_cost >= 1);
 
-  if (vect_is_emulated_mixed_dot_prod (slp_node))
-    {
-      /* We need extra two invariants: one that contains the minimum signed
-	 value and one that contains half of its negative.  */
-      int prologue_stmts = 2;
-      unsigned cost = record_stmt_cost (cost_vec, prologue_stmts,
-					scalar_to_vec, slp_node, 0,
-					vect_prologue);
-      if (dump_enabled_p ())
-	dump_printf (MSG_NOTE, "vectorizable_lane_reducing: "
-		     "extra prologue_cost = %d .\n", cost);
-
-      /* Three dot-products and a subtraction.  */
-      ncopies_for_cost *= 4;
-    }
-
-  record_stmt_cost (cost_vec, (int) ncopies_for_cost, vector_stmt, slp_node,
-		    0, vect_body);
-
   if (LOOP_VINFO_CAN_USE_PARTIAL_VECTORS_P (loop_vinfo))
     {
       enum tree_code code = gimple_assign_rhs_code (stmt);
@@ -6904,6 +6891,25 @@ vectorizable_lane_reducing (loop_vec_info loop_vinfo, stmt_vec_info stmt_info,
 				   vectype_in, NULL);
 	}
     }
+
+  if (vect_is_emulated_mixed_dot_prod (slp_node))
+    {
+      /* We need extra two invariants: one that contains the minimum signed
+	 value and one that contains half of its negative.  */
+      int prologue_stmts = 2;
+      unsigned cost = record_stmt_cost (cost_vec, prologue_stmts,
+					scalar_to_vec, slp_node, 0,
+					vect_prologue);
+      if (dump_enabled_p ())
+	dump_printf (MSG_NOTE, "vectorizable_lane_reducing: "
+		     "extra prologue_cost = %d .\n", cost);
+
+      /* Three dot-products and a subtraction.  */
+      ncopies_for_cost *= 4;
+    }
+
+  record_stmt_cost (cost_vec, (int) ncopies_for_cost, vector_stmt, slp_node,
+		    0, vect_body);
 
   /* Transform via vect_transform_reduction.  */
   SLP_TREE_TYPE (slp_node) = reduc_vec_info_type;
@@ -9650,7 +9656,9 @@ vectorizable_induction (loop_vec_info loop_vinfo,
       return false;
     }
   tree stept = TREE_TYPE (step_expr);
-  tree step_vectype = get_same_sized_vectype (stept, vectype);
+  tree step_vectype
+    = (!INTEGRAL_TYPE_P (stept) ? vectype
+       : signed_or_unsigned_type_for (TYPE_UNSIGNED (stept), vectype));
   stept = TREE_TYPE (step_vectype);
 
   /* Check for target support of the vectorized arithmetic used here.  */
@@ -10322,10 +10330,8 @@ vectorizable_live_operation (vec_info *vinfo, stmt_vec_info stmt_info,
 		}
 	    }
 	}
-      /* ???  Enable for loop costing as well.  */
-      if (!loop_vinfo)
-	record_stmt_cost (cost_vec, 1, vec_to_scalar, slp_node,
-			  0, vect_epilogue);
+      record_stmt_cost (cost_vec, 1, vec_to_scalar, slp_node,
+			0, loop_vinfo ? vect_epilogue : vect_body);
       SLP_TREE_LIVE_LANES (slp_node).safe_push (slp_index);
       return true;
     }

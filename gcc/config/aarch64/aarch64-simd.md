@@ -1235,6 +1235,21 @@
   [(set_attr "type" "neon_reduc_add<q>")]
 )
 
+(define_expand "<su>sadv8qi"
+  [(use (match_operand:V2SI 0 "register_operand"))
+   (USMAX:V8QI (match_operand:V8QI 1 "register_operand")
+		(match_operand:V8QI 2 "register_operand"))
+   (use (match_operand:V2SI 3 "register_operand"))]
+  "TARGET_DOTPROD"
+  {
+    rtx ones = force_reg (V8QImode, CONST1_RTX (V8QImode));
+    rtx abd = gen_reg_rtx (V8QImode);
+    emit_insn (gen_aarch64_<su>abdv8qi (abd, operands[1], operands[2]));
+    emit_insn (gen_udot_prodv2siv8qi (operands[0], abd, ones, operands[3]));
+    DONE;
+  }
+)
+
 ;; Emit a sequence to produce a sum-of-absolute-differences of the V16QI
 ;; inputs in operands 1 and 2.  The sequence also has to perform a widening
 ;; reduction of the difference into a V4SI vector and accumulate that into
@@ -5107,15 +5122,27 @@
 (define_insn "*aarch64_combinez<mode>"
   [(set (match_operand:<VDBL> 0 "register_operand")
 	(vec_concat:<VDBL>
-          (match_operand:VS32_I_SUB64_F 1 "nonimmediate_operand")
-	  (match_operand:VS32_I_SUB64_F 2 "aarch64_simd_or_scalar_imm_zero")))]
+	 (match_operand:VS32_I_SUB64_F_CONDFP16 1 "nonimmediate_operand")
+	 (match_operand:VS32_I_SUB64_F_CONDFP16 2 "aarch64_simd_or_scalar_imm_zero")))]
   "TARGET_FLOAT && !BYTES_BIG_ENDIAN"
   {@ [ cons: =0 , 1  ; attrs: type      ]
      [ w        , w  ; neon_move        ] fmov\t%<single_type>0, %<single_type>1
      [ w        , r  ; neon_from_gp     ] fmov\t%<single_type>0, %<single_wx>1
      [ w        , m  ; neon_load1_1reg  ] ldr\t%<single_type>0, %1
-     [ r        , r  ; mov_reg          ] uxtw\t%x0, %w1
+     [ r        , r  ; mov_reg          ] uxt<extsize>\t%<single_dwx>0, %w1
      [ r        , m  ; load_4           ] ldr<size>\t%<single_wx>0, %1
+  }
+)
+
+(define_insn "*aarch64_combinez<mode>"
+  [(set (match_operand:<VDBL> 0 "register_operand")
+	(vec_concat:<VDBL>
+	 (match_operand:HFBF 1 "nonimmediate_operand")
+	 (match_operand:HFBF 2 "aarch64_simd_or_scalar_imm_zero")))]
+  "TARGET_SIMD && !BYTES_BIG_ENDIAN && !TARGET_SIMD_F16INST"
+  {@ [ cons: =0 , 1  ; attrs: type ]
+     [ w        , 0  ; neon_move       ] ins\t%0.<single_type>[1], wzr
+     [ w        , m  ; neon_load1_1reg ] ldr\t%<single_type>0, %1
   }
 )
 
@@ -5147,17 +5174,30 @@
 (define_insn "*aarch64_combinez_be<mode>"
   [(set (match_operand:<VDBL> 0 "register_operand")
 	(vec_concat:<VDBL>
-	  (match_operand:VS32_I_SUB64_F 2 "aarch64_simd_or_scalar_imm_zero")
-          (match_operand:VS32_I_SUB64_F 1 "nonimmediate_operand")))]
+	 (match_operand:VS32_I_SUB64_F_CONDFP16 2 "aarch64_simd_or_scalar_imm_zero")
+	 (match_operand:VS32_I_SUB64_F_CONDFP16 1 "nonimmediate_operand")))]
   "TARGET_FLOAT && BYTES_BIG_ENDIAN"
   {@ [ cons: =0 , 1  ; attrs: type      ]
      [ w        , w  ; neon_move        ] fmov\t%<single_type>0, %<single_type>1
      [ w        , r  ; neon_from_gp     ] fmov\t%<single_type>0, %<single_wx>1
      [ w        , m  ; neon_load1_1reg  ] ldr\t%<single_type>0, %1
-     [ r        , r  ; mov_reg          ] uxtw\t%x0, %w1
+     [ r        , r  ; mov_reg          ] uxt<extsize>\t%<single_dwx>0, %w1
      [ r        , m  ; load_4           ] ldr<size>\t%<single_wx>0, %1
   }
 )
+
+(define_insn "*aarch64_combinez_be<mode>"
+  [(set (match_operand:<VDBL> 0 "register_operand")
+	(vec_concat:<VDBL>
+	 (match_operand:HFBF 2 "aarch64_simd_or_scalar_imm_zero")
+	 (match_operand:HFBF 1 "nonimmediate_operand")))]
+  "TARGET_SIMD && BYTES_BIG_ENDIAN && !TARGET_SIMD_F16INST"
+  {@ [ cons: =0 , 1  ; attrs: type ]
+     [ w        , 0  ; neon_move        ] ins\t%0.<single_type>[0], wzr
+     [ w        , m  ; neon_load1_1reg  ] ldr\t%<single_type>0, %1
+  }
+)
+
 
 ;; Form a vector whose first half (in array order) comes from operand 1
 ;; and whose second half (in array order) comes from operand 2.
@@ -10339,7 +10379,7 @@
 	(unspec:V4SF [(match_operand:V4SF 1 "register_operand")
 			   (match_operand:V8HF 2 "register_operand")
 			   (match_operand:V8HF 3 "register_operand")
-			   (match_operand:SI 4 "aarch64_lane_imm3")]
+			   (match_operand:SI 4 "aarch64_imm3")]
 	 VFMLA16_LOW))]
   "TARGET_F16FML"
 {
@@ -10359,7 +10399,7 @@
 	(unspec:V4SF [(match_operand:V4SF 1 "register_operand")
 			   (match_operand:V8HF 2 "register_operand")
 			   (match_operand:V8HF 3 "register_operand")
-			   (match_operand:SI 4 "aarch64_lane_imm3")]
+			   (match_operand:SI 4 "aarch64_imm3")]
 	 VFMLA16_HIGH))]
   "TARGET_F16FML"
 {
@@ -10385,7 +10425,7 @@
 	  (vec_duplicate:V4HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V4SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlal\\t%0.4s, %2.4h, %3.h[%5]"
@@ -10404,7 +10444,7 @@
 	  (vec_duplicate:V4HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V4SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlsl\\t%0.4s, %2.4h, %3.h[%5]"
@@ -10422,7 +10462,7 @@
 	  (vec_duplicate:V4HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V4SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlal2\\t%0.4s, %2.4h, %3.h[%5]"
@@ -10441,7 +10481,7 @@
 	  (vec_duplicate:V4HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V4SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlsl2\\t%0.4s, %2.4h, %3.h[%5]"
@@ -10453,7 +10493,7 @@
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand")
 		      (match_operand:V4HF 2 "register_operand")
 		      (match_operand:V8HF 3 "register_operand")
-		      (match_operand:SI 4 "aarch64_lane_imm3")]
+		      (match_operand:SI 4 "aarch64_imm3")]
 	 VFMLA16_LOW))]
   "TARGET_F16FML"
 {
@@ -10474,7 +10514,7 @@
 	(unspec:V2SF [(match_operand:V2SF 1 "register_operand")
 		      (match_operand:V4HF 2 "register_operand")
 		      (match_operand:V8HF 3 "register_operand")
-		      (match_operand:SI 4 "aarch64_lane_imm3")]
+		      (match_operand:SI 4 "aarch64_imm3")]
 	 VFMLA16_HIGH))]
   "TARGET_F16FML"
 {
@@ -10501,7 +10541,7 @@
 	  (vec_duplicate:V2HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V2SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlal\\t%0.2s, %2.2h, %3.h[%5]"
@@ -10520,7 +10560,7 @@
 	  (vec_duplicate:V2HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V2SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlsl\\t%0.2s, %2.2h, %3.h[%5]"
@@ -10538,7 +10578,7 @@
 	  (vec_duplicate:V2HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V2SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlal2\\t%0.2s, %2.2h, %3.h[%5]"
@@ -10557,7 +10597,7 @@
 	  (vec_duplicate:V2HF
 	   (vec_select:HF
 	    (match_operand:V8HF 3 "register_operand" "x")
-	    (parallel [(match_operand:SI 5 "aarch64_lane_imm3" "Ui7")]))))
+	    (parallel [(match_operand:SI 5 "aarch64_imm3" "Ui7")]))))
 	 (match_operand:V2SF 1 "register_operand" "0")))]
   "TARGET_F16FML"
   "fmlsl2\\t%0.2s, %2.2h, %3.h[%5]"

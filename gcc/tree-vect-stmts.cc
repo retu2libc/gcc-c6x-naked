@@ -2034,20 +2034,18 @@ vector_vector_composition_type (tree vtype, poly_uint64 nelts, tree *ptype,
 }
 
 /* Check if the load permutation of NODE only refers to a consecutive
-   subset of the group indices where GROUP_SIZE is the size of the
-   dataref's group.  We also assert that the length of the permutation
-   divides the group size and is a power of two.
+   subset of the group indices.  We also require the length of the
+   permutation to be a power of two.
    Such load permutations can be elided in strided access schemes as
    we can "jump over" the gap they leave.  */
 
-bool
-has_consecutive_load_permutation (slp_tree node, unsigned group_size)
+static bool
+has_consecutive_load_permutation (slp_tree node)
 {
   load_permutation_t perm = SLP_TREE_LOAD_PERMUTATION (node);
   if (!perm.exists ()
       || perm.length () <= 1
-      || !pow2p_hwi (perm.length ())
-      || group_size % perm.length ())
+      || !pow2p_hwi (perm.length ()))
     return false;
 
   return vect_load_perm_consecutive_p (node);
@@ -2129,17 +2127,6 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
     }
   dr_vec_info *first_dr_info = STMT_VINFO_DR_INFO (first_stmt_info);
 
-  /* True if the vectorized statements would access beyond the last
-     statement in the group.  */
-  bool overrun_p = false;
-
-  /* True if we can cope with such overrun by peeling for gaps, so that
-     there is at least one final scalar iteration after the vector loop.  */
-  bool can_overrun_p = (!masked_p
-			&& vls_type == VLS_LOAD
-			&& loop_vinfo
-			&& !loop->inner);
-
   /* There can only be a gap at the end of the group if the stride is
      known at compile time.  */
   gcc_assert (!STMT_VINFO_STRIDED_P (first_stmt_info) || gap == 0);
@@ -2159,7 +2146,7 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
       /* If the load permutation is consecutive we can reduce the group to
 	 the elements the permutation accesses.  Then we release the
 	 permutation.  */
-      if (has_consecutive_load_permutation (slp_node, group_size))
+      if (has_consecutive_load_permutation (slp_node))
 	{
 	  ls->subchain_p = true;
 	  group_size = SLP_TREE_LANES (slp_node);
@@ -2271,6 +2258,19 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
       else
 	*memory_access_type = VMAT_CONTIGUOUS;
 
+      /* True if the vectorized statements would access beyond the last
+	 statement in the group.  */
+      bool overrun_p = false;
+
+      /* True if we can cope with such overrun by peeling for gaps, so that
+	 there is at least one final scalar iteration after the vector loop.  */
+      bool can_overrun_p = (!masked_p
+			    && vls_type == VLS_LOAD
+			    && loop_vinfo
+			    && !loop->inner
+			    && (*memory_access_type != VMAT_STRIDED_SLP
+				|| cmp > 0));
+
       /* If this is single-element interleaving with an element
 	 distance that leaves unused vector loads around fall back
 	 to elementwise access if possible - we otherwise least
@@ -2356,7 +2356,8 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
       unsigned HOST_WIDE_INT tem, num;
       if (overrun_p
 	  && !masked_p
-	  && *memory_access_type != VMAT_LOAD_STORE_LANES
+	  && (*memory_access_type == VMAT_CONTIGUOUS
+	      || *memory_access_type == VMAT_CONTIGUOUS_REVERSE)
 	  && (((alss = vect_supportable_dr_alignment (vinfo, first_dr_info,
 						      vectype, misalign)))
 	      == dr_aligned
@@ -2436,6 +2437,16 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
 				 "the end of the access\n");
 	      LOOP_VINFO_CAN_USE_PARTIAL_VECTORS_P (loop_vinfo) = false;
 	    }
+	}
+
+      if (overrun_p)
+	{
+	  gcc_assert (can_overrun_p);
+	  if (dump_enabled_p ())
+	    dump_printf_loc (MSG_MISSED_OPTIMIZATION, vect_location,
+			     "Data access with gaps requires scalar "
+			     "epilogue loop\n");
+	  LOOP_VINFO_PEELING_FOR_GAPS (loop_vinfo) = true;
 	}
     }
 
@@ -2532,16 +2543,6 @@ get_load_store_type (vec_info  *vinfo, stmt_vec_info stmt_info,
 	  *alignment_support_scheme = dr_unaligned_supported;
 	  *misalignment = DR_MISALIGNMENT_UNKNOWN;
 	}
-    }
-
-  if (overrun_p)
-    {
-      gcc_assert (can_overrun_p);
-      if (dump_enabled_p ())
-	dump_printf_loc (MSG_MISSED_OPTIMIZATION, vect_location,
-			 "Data access with gaps requires scalar "
-			 "epilogue loop\n");
-      LOOP_VINFO_PEELING_FOR_GAPS (loop_vinfo) = true;
     }
 
   if ((*memory_access_type == VMAT_ELEMENTWISE
@@ -5391,6 +5392,17 @@ vectorizable_conversion (vec_info *vinfo,
       return false;
     }
 
+  /* _BitInt values are not sign-/zero-extended to mode precision.  */
+  if (!VECTOR_BOOLEAN_TYPE_P (vectype_out)
+      && TREE_CODE (rhs_type) == BITINT_TYPE
+      && !type_has_mode_precision_p (rhs_type))
+    {
+      if (dump_enabled_p ())
+	dump_printf_loc (MSG_MISSED_OPTIMIZATION, vect_location,
+			 "type conversion from _BitInt unsupported\n");
+      return false;
+    }
+
   if (op_type == binary_op)
     {
       gcc_assert (code == WIDEN_MULT_EXPR
@@ -6088,10 +6100,16 @@ vectorizable_assignment (vec_info *vinfo,
   /* Arguments are ready. create the new vector stmt.  */
   FOR_EACH_VEC_ELT (vec_oprnds, i, vop)
     {
-      if (CONVERT_EXPR_CODE_P (code)
-	  || code == VIEW_CONVERT_EXPR)
-	vop = build1 (VIEW_CONVERT_EXPR, vectype, vop);
-      gassign *new_stmt = gimple_build_assign (vec_dest, vop);
+      gassign *new_stmt;
+      if (code == PAREN_EXPR)
+	new_stmt = gimple_build_assign (vec_dest, PAREN_EXPR, vop);
+      else
+	{
+	  if (CONVERT_EXPR_CODE_P (code)
+	      || code == VIEW_CONVERT_EXPR)
+	    vop = build1 (VIEW_CONVERT_EXPR, vectype, vop);
+	  new_stmt = gimple_build_assign (vec_dest, vop);
+	}
       new_temp = make_ssa_name (vec_dest, new_stmt);
       gimple_assign_set_lhs (new_stmt, new_temp);
       vect_finish_stmt_generation (vinfo, stmt_info, new_stmt, gsi);
@@ -6868,9 +6886,9 @@ vectorizable_operation (vec_info *vinfo,
 	  if (n != 0)
 	    {
 	      /* We also need to materialize two large constants.  */
-	      record_stmt_cost (cost_vec, 2, scalar_stmt, stmt_info,
+	      record_stmt_cost (cost_vec, 2, scalar_stmt, slp_node,
 				0, vect_prologue);
-	      record_stmt_cost (cost_vec, n, scalar_stmt, stmt_info,
+	      record_stmt_cost (cost_vec, n, scalar_stmt, slp_node,
 				0, vect_body);
 	    }
 	}
@@ -10065,9 +10083,13 @@ vectorizable_load (vec_info *vinfo,
 	    }
 	  enum vect_cost_model_location cost_loc
 	    = hoist_p ? vect_prologue : vect_body;
-	  unsigned int cost = record_stmt_cost (cost_vec, 1, scalar_load,
+	  unsigned int cost = record_stmt_cost (cost_vec,
+						uniform_p
+						? 1 : SLP_TREE_LANES (slp_node),
+						scalar_load,
 						slp_node, 0, cost_loc);
-	  cost += record_stmt_cost (cost_vec, 1, scalar_to_vec,
+	  cost += record_stmt_cost (cost_vec, 1,
+				    uniform_p ? scalar_to_vec : vec_construct,
 				    slp_node, 0, cost_loc);
 	  unsigned int prologue_cost = hoist_p ? cost : 0;
 	  unsigned int inside_cost = hoist_p ? 0 : cost;
@@ -11352,6 +11374,9 @@ vectorizable_load (vec_info *vinfo,
       return true;
     }
 
+  gcc_assert (memory_access_type == VMAT_CONTIGUOUS
+	      || memory_access_type == VMAT_CONTIGUOUS_REVERSE);
+
   aggr_type = vectype;
   if (!costing_p)
     {
@@ -12450,6 +12475,13 @@ vectorizable_comparison_1 (vec_info *vinfo, tree vectype,
   /* Can't compare mask and non-mask types.  */
   if (vectype1 && vectype2
       && (VECTOR_BOOLEAN_TYPE_P (vectype1) ^ VECTOR_BOOLEAN_TYPE_P (vectype2)))
+    return false;
+
+  /* We cannot compare non-mode precision _BitInt types.  Unlike bool
+     or bit-precision INTEGER_TYPE the padding bit values are target
+     dependent and possibly undefined.  */
+  if (TREE_CODE (TREE_TYPE (rhs1)) == BITINT_TYPE
+      && !type_has_mode_precision_p (TREE_TYPE (rhs1)))
     return false;
 
   /* Boolean values may have another representation in vectors

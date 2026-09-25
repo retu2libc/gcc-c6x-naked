@@ -75,6 +75,9 @@ UrlSuffix(gcc/AVR-Options.html#index-mrodata-in-ram)
 msp8
 UrlSuffix(gcc/AVR-Options.html#index-msp8)
 
+mdemote-switch
+UrlSuffix(gcc/AVR-Options.html#index-mdemote-switch)
+
 mfuse-add
 UrlSuffix(gcc/AVR-Options.html#index-mfuse-add)
 
@@ -107,6 +110,9 @@ UrlSuffix(gcc/AVR-Options.html#index-mfuse-move)
 
 mfuse-move2
 UrlSuffix(gcc/AVR-Options.html#index-mfuse-move2)
+
+moptimize
+UrlSuffix(gcc/AVR-Options.html#index-moptimize-1)
 
 mabsdata
 UrlSuffix(gcc/AVR-Options.html#index-mabsdata)

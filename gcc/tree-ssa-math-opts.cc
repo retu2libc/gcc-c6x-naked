@@ -4123,7 +4123,7 @@ extern bool gimple_signed_integer_sat_add (tree, tree*, tree (*)(tree));
 extern bool gimple_signed_integer_sat_sub (tree, tree*, tree (*)(tree));
 extern bool gimple_signed_integer_sat_trunc (tree, tree*, tree (*)(tree));
 
-static void
+static bool
 build_saturation_binary_arith_call_and_replace (gimple_stmt_iterator *gsi,
 						internal_fn fn, tree lhs,
 						tree op_0, tree op_1)
@@ -4133,7 +4133,10 @@ build_saturation_binary_arith_call_and_replace (gimple_stmt_iterator *gsi,
       gcall *call = gimple_build_call_internal (fn, 2, op_0, op_1);
       gimple_call_set_lhs (call, lhs);
       gsi_replace (gsi, call, /* update_eh_info */ true);
+      return true;
     }
+
+  return false;
 }
 
 static bool
@@ -4177,9 +4180,10 @@ build_saturation_binary_arith_call_and_insert (gimple_stmt_iterator *gsi,
  * # _9 = PHI <_2(3), 128(2)>
  * _4 = (int8_t) _9;
  *   =>
- * _4 = .SAT_ADD (x_5, -1); */
+ * _4 = .SAT_ADD (x_5, -1);
+ * Return true if the statement was replaced.  */
 
-static void
+static bool
 match_saturation_add_with_assign (gimple_stmt_iterator *gsi, gassign *stmt)
 {
   tree ops[2];
@@ -4187,8 +4191,10 @@ match_saturation_add_with_assign (gimple_stmt_iterator *gsi, gassign *stmt)
 
   if (gimple_unsigned_integer_sat_add (lhs, ops, NULL)
       || gimple_signed_integer_sat_add (lhs, ops, NULL))
-    build_saturation_binary_arith_call_and_replace (gsi, IFN_SAT_ADD, lhs,
-						    ops[0], ops[1]);
+    return build_saturation_binary_arith_call_and_replace (gsi, IFN_SAT_ADD,
+							   lhs, ops[0], ops[1]);
+
+  return false;
 }
 
 /*
@@ -4252,22 +4258,26 @@ match_saturation_add (gimple_stmt_iterator *gsi, gphi *phi)
 }
 
 /*
- * Try to match saturation unsigned sub.
+ * Try to match saturation sub with assign.
  *   _1 = _4 >= _5;
  *   _3 = _4 - _5;
  *   _6 = _1 ? _3 : 0;
  *   =>
- *   _6 = .SAT_SUB (_4, _5);  */
+ *   _6 = .SAT_SUB (_4, _5);
+ * Return true if the statement was replaced.  */
 
-static void
-match_unsigned_saturation_sub (gimple_stmt_iterator *gsi, gassign *stmt)
+static bool
+match_saturation_sub_with_assign (gimple_stmt_iterator *gsi, gassign *stmt)
 {
   tree ops[2];
   tree lhs = gimple_assign_lhs (stmt);
 
-  if (gimple_unsigned_integer_sat_sub (lhs, ops, NULL))
-    build_saturation_binary_arith_call_and_replace (gsi, IFN_SAT_SUB, lhs,
-						    ops[0], ops[1]);
+  if (gimple_unsigned_integer_sat_sub (lhs, ops, NULL)
+      || gimple_signed_integer_sat_sub (lhs, ops, NULL))
+    return build_saturation_binary_arith_call_and_replace (gsi, IFN_SAT_SUB,
+							   lhs, ops[0], ops[1]);
+
+  return false;
 }
 
 /*
@@ -6559,12 +6569,51 @@ can_widen_to_narrow_p (scalar_int_mode narrow_mode, unsigned int half_width,
 	 != CODE_FOR_nothing;
 }
 
+static bool long_mul_op_fits_p (tree, unsigned, bitmap);
+
+/* Build into *SEQ the (N/2)-bit halves *LO and *HI of OP, in the form
+   USE_WIDEN selects.  An operand provably within N/2 bits has a zero
+   high half: *HI is left null.  */
+
+static void
+build_long_mul_partial_operand (gimple_seq *seq, location_t loc, tree op,
+				tree half_type, tree half_amt, bool use_widen,
+				tree *lo, tree *hi)
+{
+  tree acc_type = TREE_TYPE (op);
+  unsigned int half_prec = TYPE_PRECISION (half_type);
+  auto_bitmap phi_seen;
+  bool fits = long_mul_op_fits_p (op, half_prec, phi_seen);
+
+  *hi = NULL_TREE;
+  if (!fits)
+    *hi = gimple_build (seq, loc, RSHIFT_EXPR, acc_type, op, half_amt);
+
+  if (use_widen)
+    {
+      *lo = gimple_build (seq, loc, NOP_EXPR, half_type, op);
+      if (*hi)
+	*hi = gimple_build (seq, loc, NOP_EXPR, half_type, *hi);
+    }
+  else if (fits)
+    *lo = op;
+  else
+    {
+      tree mask = wide_int_to_tree (acc_type,
+				    wi::mask (half_prec, false,
+					      TYPE_PRECISION (acc_type)));
+      *lo = gimple_build (seq, loc, BIT_AND_EXPR, acc_type, op, mask);
+    }
+}
+
 /* Append to *SEQ the operand split and partial products for an unsigned
    long multiply of OP1 by OP2 at the precision of TREE_TYPE (OP1).
    HALF_TYPE is the (N/2)-bit unsigned type; HALF_AMT is the integer-typed
    shift constant equal to N/2.
 
    Outputs the four partial products via *LOLO, *HILO, *LOHI, *HIHI.
+   An operand provably within N/2 bits contributes literal-zero high
+   partials.
 
    USE_WIDEN selects the partial-product form:
      true  - cast halves to HALF_TYPE and use WIDEN_MULT_EXPR (needs
@@ -6580,33 +6629,22 @@ build_long_mul_partials (gimple_seq *seq, location_t loc, tree op1, tree op2,
 			 bool use_widen)
 {
   tree acc_type = TREE_TYPE (op1);
-  tree op1_hi = gimple_build (seq, loc, RSHIFT_EXPR, acc_type, op1, half_amt);
-  tree op2_hi = gimple_build (seq, loc, RSHIFT_EXPR, acc_type, op2, half_amt);
-  tree op1_lo, op2_lo;
-  tree_code mul_code;
+  tree zero = build_zero_cst (acc_type);
+  tree_code mul_code = use_widen ? WIDEN_MULT_EXPR : MULT_EXPR;
+  tree op1_lo, op1_hi, op2_lo, op2_hi;
 
-  if (use_widen)
-    {
-      op1_lo = gimple_build (seq, loc, NOP_EXPR, half_type, op1);
-      op2_lo = gimple_build (seq, loc, NOP_EXPR, half_type, op2);
-      op1_hi = gimple_build (seq, loc, NOP_EXPR, half_type, op1_hi);
-      op2_hi = gimple_build (seq, loc, NOP_EXPR, half_type, op2_hi);
-      mul_code = WIDEN_MULT_EXPR;
-    }
-  else
-    {
-      tree mask = wide_int_to_tree (acc_type,
-				    wi::mask (TYPE_PRECISION (half_type), false,
-					      TYPE_PRECISION (acc_type)));
-      op1_lo = gimple_build (seq, loc, BIT_AND_EXPR, acc_type, op1, mask);
-      op2_lo = gimple_build (seq, loc, BIT_AND_EXPR, acc_type, op2, mask);
-      mul_code = MULT_EXPR;
-    }
+  build_long_mul_partial_operand (seq, loc, op1, half_type, half_amt, use_widen,
+				  &op1_lo, &op1_hi);
+  build_long_mul_partial_operand (seq, loc, op2, half_type, half_amt, use_widen,
+				  &op2_lo, &op2_hi);
 
   *lolo = gimple_build (seq, loc, mul_code, acc_type, op1_lo, op2_lo);
-  *hilo = gimple_build (seq, loc, mul_code, acc_type, op1_hi, op2_lo);
-  *lohi = gimple_build (seq, loc, mul_code, acc_type, op1_lo, op2_hi);
-  *hihi = gimple_build (seq, loc, mul_code, acc_type, op1_hi, op2_hi);
+  *hilo = op1_hi
+	  ? gimple_build (seq, loc, mul_code, acc_type, op1_hi, op2_lo) : zero;
+  *lohi = op2_hi
+	  ? gimple_build (seq, loc, mul_code, acc_type, op1_lo, op2_hi) : zero;
+  *hihi = op1_hi && op2_hi
+	  ? gimple_build (seq, loc, mul_code, acc_type, op1_hi, op2_hi) : zero;
 }
 
 /* Emit into *SEQ the high N bits of the unsigned product A * B, where A and B
@@ -7331,15 +7369,18 @@ math_opts_dom_walker::after_dom_children (basic_block bb)
 		  continue;
 		}
 	      match_arith_overflow (&gsi, stmt, code, m_cfg_changed_p);
-	      match_unsigned_saturation_sub (&gsi, as_a<gassign *> (stmt));
+	      match_saturation_sub_with_assign (&gsi, as_a<gassign *> (stmt));
 	      break;
 
 	    case PLUS_EXPR:
-	      match_saturation_add_with_assign (&gsi, as_a<gassign *> (stmt));
-	      match_unsigned_saturation_sub (&gsi, as_a<gassign *> (stmt));
+	      if (match_saturation_add_with_assign (&gsi,
+						    as_a<gassign *> (stmt)))
+		break;
 	      /* fall-through  */
 	    case MINUS_EXPR:
-	      if (!convert_plusminus_to_widen (&gsi, stmt, code))
+	      if (!match_saturation_sub_with_assign (&gsi,
+						  as_a<gassign *> (stmt))
+		  && !convert_plusminus_to_widen (&gsi, stmt, code))
 		{
 		  match_arith_overflow (&gsi, stmt, code, m_cfg_changed_p);
 		  if (gsi_stmt (gsi) == stmt)
@@ -7378,13 +7419,14 @@ math_opts_dom_walker::after_dom_children (basic_block bb)
 
 	    case COND_EXPR:
 	    case BIT_AND_EXPR:
-	      match_unsigned_saturation_sub (&gsi, as_a<gassign *> (stmt));
+	      match_saturation_sub_with_assign (&gsi, as_a<gassign *> (stmt));
 	      break;
 
 	    case NOP_EXPR:
 	      match_unsigned_saturation_mul (&gsi, as_a<gassign *> (stmt));
 	      match_unsigned_saturation_trunc (&gsi, as_a<gassign *> (stmt));
 	      match_saturation_add_with_assign (&gsi, as_a<gassign *> (stmt));
+	      match_saturation_sub_with_assign (&gsi, as_a<gassign *> (stmt));
 	      /* fall-through  */
 	    case CONVERT_EXPR:
 	      /* The long-multiply recognizer's high-part emit ends in an

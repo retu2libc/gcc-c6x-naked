@@ -63,6 +63,7 @@
 .Op Fl Wno-dynamic-call
 .Op Fl Wno-ec-unknown
 .Op Fl Wno-entry-convention
+.Op Fl Wno-hex-numeric
 .Op Fl Wno-ibm-cdf
 .Op Fl Wno-iconv-error
 .Op Fl Wno-include-file-found
@@ -654,6 +655,8 @@ Warn if DISPLAY WITH screen options is used.
 Note if CALL with dynamic target is used.
 .It Fl Wno-file-code-set
 Warn if FILE CODE SET is used.
+.It Fl Wno-hex-numeric
+Warn if hexadecimal notation is used for integers.
 .It Fl Wno-inspect-trailing
 Warn if INSPECT ... TRAILING is used.
 .It Fl Wno-level-1-occurs
@@ -1957,7 +1960,7 @@ If defined, specifies the directory paths to be used by the
 .Nm
 runtime library,
 .Pa libgcobol.so ,
-to locate shared objects.
+to locate entry points in shared objects.
 Like
 .Ev LD_LIBRARY_PATH ,
 it may contain several directory names separated by a colon
@@ -1975,16 +1978,22 @@ when the executable loads is controlled by
 .Xr ld.so 8 ,
 not libgcobol.
 .Pp
-Each directory is searched for files whose name ends in
-.Ql ".so" .
-For each such file,
+Each directory is searched for files whose names are based on the desired
+symbol.  As an example, consider a CALL to the program-id "FooBar". When the
+.Sy CALL-CONVENTION COBOL
+is operative, the symbol is forced to lowercase and an attempt is made to find
+"FOOBAR.so", followed by an attempt to find "foobar.so".  When
+.Sy CALL-CONVENTION VERBATIM
+is operative, attempts are made to find "FOOBAR.so", then "FooBar.so, and finally
+"foobar.so".  For each such file,
 .Xr dlopen 3
-is attempted, and, if successful
-.Xr dlsym 3 .
-No relationship is defined between the symbol's name and the filename.
+is attempted, and if successful,
+.Xr dlsym 3 is used to search for the 
+symbol.
 .Pp
-Without
-.Ev COBPATH ,
+When 
+.Ev COBPATH and 
+.Ev LD_LIBRARY_PATH are not explicitly used, 
 binaries produced by
 .Nm
 behave as one might expect of any program compiled with gcc.  Any

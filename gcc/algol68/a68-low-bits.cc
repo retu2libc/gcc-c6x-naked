@@ -216,7 +216,7 @@ a68_bits_elem (NODE_T *p, tree pos, tree bits)
   /* Do bounds checking if requested.  */
   if (OPTION_BOUNDS_CHECKING (&A68_JOB))
     {
-      unsigned int lineno = NUMBER (LINE (INFO (p)));
+      unsigned int lineno = LINE_NUMBER (p);
       const char *filename_str = FILENAME (LINE (INFO (p)));
       tree filename = build_string_literal (strlen (filename_str) + 1,
 					    filename_str);
@@ -225,10 +225,10 @@ a68_bits_elem (NODE_T *p, tree pos, tree bits)
 				     filename,
 				     build_int_cst (unsigned_type_node, lineno),
 				     fold_convert (ssizetype, pos));
-      tree check = fold_build2 (TRUTH_AND_EXPR, integer_type_node,
-				fold_build2 (GT_EXPR, integer_type_node,
+      tree check = fold_build2 (TRUTH_AND_EXPR, a68_int_type,
+				fold_build2 (GT_EXPR, a68_int_type,
 					     pos, fold_convert (TREE_TYPE (pos), integer_zero_node)),
-				fold_build2 (LE_EXPR, integer_type_node,
+				fold_build2 (LE_EXPR, a68_int_type,
 					     fold_convert (bitsizetype, pos),
 					     TYPE_SIZE (TREE_TYPE (bits))));
 
@@ -298,7 +298,7 @@ a68_bits_shift (NODE_T *p, tree shift, tree bits)
 tree
 a68_bits_eq (tree a, tree b, location_t loc)
 {
-  return fold_build2_loc (loc, EQ_EXPR, boolean_type_node, a, b);
+  return fold_build2_loc (loc, EQ_EXPR, a68_bool_type, a, b);
 }
 
 /* Given two bits values, build an expression that calculates whether A /=
@@ -307,7 +307,7 @@ a68_bits_eq (tree a, tree b, location_t loc)
 tree
 a68_bits_ne (tree a, tree b, location_t loc)
 {
-  return fold_build2_loc (loc, NE_EXPR, boolean_type_node, a, b);
+  return fold_build2_loc (loc, NE_EXPR, a68_bool_type, a, b);
 }
 
 /* Set the bit NUMBIT in BITS.

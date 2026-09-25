@@ -985,12 +985,12 @@ Objective-C and Objective-C++ Dialects}.
 
 @emph{AVR Options} (@ref{AVR Options})
 @gccoptlist{-mmcu=@var{mcu}  -mabsdata  -maccumulate-args -masm-len-notes
--mcvt  -mbranch-cost=@var{cost}  -mfuse-add=@var{level}  -mfuse-ifelse
--mfuse-move=@var{level}  -mfuse-move2
+-mbranch-cost=@var{cost}  -mcvt  -mdemote-switch  -mfuse-add=@var{level}
+-mfuse-ifelse  -mfuse-move=@var{level}  -mfuse-move2
 -mcall-prologues  -mgas-isr-prologues  -mint8  -mflmap
 -mdouble=@var{bits}  -mlong-double=@var{bits}  -mno-call-main
 -mn_flash=@var{size}  -mfract-convert-truncate  -mno-interrupts
--mmain-is-OS_task  -mrelax  -mpmem-wrap-around
+-mmain-is-OS_task  -moptimize  -mrelax  -mpmem-wrap-around
 -mrmw  -mstrict-addr-space-subsets  -mstrict-X  -mtiny-stack
 -mrodata-in-ram  -msplit-bit-shift  -msplit-ldst  -mshort-calls
 -mskip-bug  -muse-nonzero-bits  -nodevicelib  -nodevicespecs
@@ -16946,6 +16946,12 @@ file if the target supports arbitrary sections.  The name of the
 function or the name of the data item determines the section's name
 in the output file.
 
+With link-time optimization, an implicitly generated function section name is
+derived from the final assembler name unless the compiler deliberately places
+related functions, such as a thunk and its target, in the same section.  The
+final assembler name may include a compiler-generated suffix that distinguishes
+identically named internal-linkage items from different translation units.
+
 Use these options on systems where the linker can perform optimizations to
 improve locality of reference in the instruction space.  Most systems using the
 ELF object format have linkers with such optimizations.  On AIX, the linker
@@ -19264,13 +19270,19 @@ results in @option{-ftrapv} being effective.
 This option instructs the compiler to assume that pointer arithmetic
 overflow on addition and subtraction wraps around using twos-complement
 representation.  This flag disables some optimizations which assume
-pointer overflow is invalid.
+pointer overflow is invalid.  @strong{Warning:} this option exists because
+of the Linux Kernel's view of what C is.  It does @strong{not} turn pointers
+into twos-complement numbers or eliminates all rules and guarantees the C
+standard has on pointers.  @strong{Do not use} this option but rather write
+conforming C.
 
 @opindex fstrict-overflow
 @opindex fno-strict-overflow
 @item -fstrict-overflow
 This option implies @option{-fno-wrapv} @option{-fno-wrapv-pointer} and when
-negated implies @option{-fwrapv} @option{-fwrapv-pointer}.
+negated implies @option{-fwrapv} @option{-fwrapv-pointer}.  You should
+consider using @code{-fwrapv} instead of @code{-fstrict-overflow},
+the (implicit) use of @code{-fwrapv-pointer} is discouraged.
 
 @opindex fexceptions
 @opindex fno-exceptions
@@ -21489,10 +21501,10 @@ dynamically linked.  This is the default code model.
 
 @opindex mcmodel=large
 @item -mcmodel=large
-Generate code for the large code model.  This makes no assumptions about
-addresses and sizes of sections.  Programs can be statically linked only.  The
-@option{-mcmodel=large} option is incompatible with @option{-mabi=ilp32},
-@option{-fpic} and @option{-fPIC}.
+Generate code for the large code model.  This allows large .bss and .data
+sections, however .text and .rodata must still be < 2GiB in total.
+The @option{-moutline-atomics} is turned off by default.  Static linking
+with small/tiny model object files is not supported.
 
 @item -mtp=@var{name}
 @opindex mtp
@@ -24609,6 +24621,14 @@ integers. The default branch cost is 0.
 Functions prologues/epilogues are expanded as calls to appropriate
 subroutines.  Code size is smaller.
 
+@opindex mdemote-switch
+@item -mdemote-switch
+Without this option, the compiler will treat @code{switch} variables
+as 32-bit values at least.  When this option is on, an AVR-specific
+pass will try to demote such @code{switch} variables to the widths
+as actually used in the program.  This option is on per default when
+optimization is on.
+
 @opindex mfuse-add
 @item -mfuse-add
 @itemx -mno-fuse-add
@@ -24639,6 +24659,16 @@ aspect of the optimization.
 @opindex mfuse-move2
 @item -mfuse-move2
 Run a post combine optimization pass that tries to fuse move instructions.
+
+@opindex moptimize
+@item -mno-optimize
+@itemx -moptimize
+Disable / enable AVR-specific optimization passes, all documented in this
+paragraph: @option{-mdemote-switch}, @option{-mfuse-add},
+@option{-mfuse-ifelse}, @option{-mfuse-move}, @option{-mfuse-move2},
+@option{-msplit-ldst}, @option{-msplit-bit-shift}, @option{-muse-nonzero-bits}.
+Usually, you don't need to specify this option because the respective passes
+are activated by default when optimization is on.
 
 @opindex mstrict-X
 @item -mstrict-X

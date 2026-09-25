@@ -381,7 +381,6 @@ libcompat_copybook(const char *dir)
       {
           concat(gnu, dir_separator, "lib", NULL),
           concat(gnu, dir_separator, "cpy", NULL),
-          concat(gnu, dir_separator, "udf", NULL)
       };
 
   for (size_t i = 0; i < sizeof paths / sizeof *paths; i++)
@@ -639,6 +638,10 @@ cobol_langhook_handle_option (size_t scode,
 
         case OPT_Wcomp_x:
           cobol_warning(MfCompX, comp_x, warning_as_error);
+          return true;
+
+        case OPT_Whex_numeric:
+          cobol_warning(MfHexNumeric, hex_numeric, warning_as_error);
           return true;
 
         case OPT_Winspect_trailing:

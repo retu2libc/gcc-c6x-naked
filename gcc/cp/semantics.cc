@@ -3300,6 +3300,63 @@ perform_koenig_lookup (cp_expr fn_expr, vec<tree, va_gc> *args,
   return cp_expr (fn, loc);
 }
 
+/* Analyze call to a front-end builtin FN with arguments *ARGS.  Return true
+   if the call is correct, false if erroneous.  */
+
+static bool
+check_frontend_builtin (tree fn, vec<tree, va_gc> **args,
+			tsubst_flags_t complain)
+{
+  tree arg, ptype, type;
+  switch (DECL_UNCHECKED_FUNCTION_CODE (fn))
+    {
+    case CP_BUILT_IN_IS_WITHIN_LIFETIME:
+    case CP_BUILT_IN_START_LIFETIME:
+      /* Unless users call the builtin directly, the following 2 checks
+	 should be ensured from std::is_within_lifetime or
+	 std::start_lifetime template.  */
+      if (vec_safe_length (*args) != 1)
+	{
+	  if (complain & tf_error)
+	    error ("%qE needs a single argument", DECL_NAME (fn));
+	  return false;
+	}
+      arg = (**args)[0];
+      if (error_operand_p (arg))
+	return false;
+      ptype = TREE_TYPE (arg);
+      if (!POINTER_TYPE_P (ptype))
+	{
+	  if (complain & tf_error)
+	    error ("%qE argument type %qT is not pointer type",
+		   DECL_NAME (fn), ptype);
+	  return false;
+	}
+      if (DECL_UNCHECKED_FUNCTION_CODE (fn) == CP_BUILT_IN_IS_WITHIN_LIFETIME)
+	return true;
+      type = TREE_TYPE (ptype);
+      if (!complete_type_or_maybe_complain (type, NULL_TREE, complain))
+	return false;
+      if (!CP_AGGREGATE_TYPE_P (type))
+	{
+	  if (complain & tf_error)
+	    error ("%qE argument type %qT is not a pointer to aggregate type",
+		   DECL_NAME (fn), ptype);
+	  return false;
+	}
+      if (!implicit_lifetime_type_p (type))
+	{
+	  if (complain & tf_error)
+	    error ("%qE argument type %qT is not a pointer to "
+		   "implicit-lifetime type", DECL_NAME (fn), ptype);
+	  return false;
+	}
+      return true;
+    default:
+      return true;
+    }
+}
+
 /* Generate an expression for `FN (ARGS)'.  This may change the
    contents of ARGS.
 
@@ -3541,30 +3598,9 @@ finish_call_expr (tree fn, vec<tree, va_gc> **args, bool disallow_virtual,
 	    }
 
 	  if (TREE_CODE (fn) == FUNCTION_DECL
-	      && fndecl_built_in_p (fn, CP_BUILT_IN_IS_WITHIN_LIFETIME,
-				    BUILT_IN_FRONTEND))
-	    {
-	      /* Unless users call the builtin directly, the following 2 checks
-		 should be ensured from std::is_within_lifetime template.  */
-	      if (vec_safe_length (*args) != 1)
-		{
-		  if (complain & tf_error)
-		    error ("%<__builtin_is_within_lifetime%> needs a single "
-			   "argument");
-		  return error_mark_node;
-		}
-	      tree arg = (**args)[0];
-	      if (error_operand_p (arg))
-		return error_mark_node;
-	      tree ptype = TREE_TYPE (arg);
-	      if (!POINTER_TYPE_P (ptype))
-		{
-		  if (complain & tf_error)
-		    error ("%<__builtin_is_within_lifetime%> argument type "
-			   "%qT is not pointer type", ptype);
-		  return error_mark_node;
-		}
-	    }
+	      && fndecl_built_in_p (fn, BUILT_IN_FRONTEND)
+	      && !check_frontend_builtin (fn, args, complain))
+	    return error_mark_node;
 
 	  /* A call to a namespace-scope function.  */
 	  result = build_new_function_call (fn, args, orig_complain);
@@ -9575,6 +9611,22 @@ finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
 		remove = true;
 		break;
 	      }
+
+	    tree attr;
+	    if (DECL_P (t)
+		&& OMP_CLAUSE_CODE (c) == OMP_CLAUSE_MAP
+		&& (attr = lookup_attribute ("omp declare target",
+					     DECL_ATTRIBUTES (t)))
+		&& value_member (get_identifier ("local"),
+				 TREE_VALUE (attr)))
+	      {
+		error_at (OMP_CLAUSE_LOCATION (c),
+			  "device-local variable %qD cannot appear "
+			  "in map clause", t);
+		remove = true;
+		break;
+	      }
+
 	    /* OpenACC attach / detach clauses must be pointers.  */
 	    if (cp_oacc_check_attachments (c))
 	      {
@@ -9818,6 +9870,7 @@ finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
 
 	case OMP_CLAUSE_ENTER:
 	case OMP_CLAUSE_LINK:
+	case OMP_CLAUSE_LOCAL:
 	  t = OMP_CLAUSE_DECL (c);
 	  const char *cname;
 	  cname = omp_clause_code_name[OMP_CLAUSE_CODE (c)];
@@ -15017,12 +15070,6 @@ cp_build_bit_cast (location_t loc, tree type, tree arg,
 	{
 	  error_at (loc, "%<__builtin_bit_cast%> destination type %qT "
 			 "is not trivially copyable", type);
-	  return error_mark_node;
-	}
-      if (consteval_only_p (type) || consteval_only_p (arg))
-	{
-	  error_at (loc, "%<__builtin_bit_cast%> cannot be used with "
-			 "consteval-only types");
 	  return error_mark_node;
 	}
     }

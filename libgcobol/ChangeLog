@@ -1,3 +1,142 @@
+2026-09-24  Robert Dubner  <rdubner@symas.com>
+
+	* libgcobol.cc (find_in_dirs): Use the cached array.
+	(function_handle_from_cobpath): Create the cached array.
+
+2026-09-23  Robert Dubner  <rdubner@symas.com>
+
+	* libgcobol.cc (do_the_dl_thing): Implement the updated policies.
+	(find_in_dirs): Use modified do_the_dl_thing().
+	(__gg__function_handle_from_cobpath): Honor the call_convention.
+	(function_handle_from_cobpath): Likewise.
+	(__gg__function_handle_from_literal): Likewise.
+	(__gg__function_handle_from_name): Likewise.
+
+2026-09-22  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/cbl_gpi.cc (struct gpi_priv): Fix flawed logic.
+	(getlastprog): Likewise.
+	(callstack): Likewise.
+	(cbl_gpi_cur_status): Likewise.
+	(cbl_gpi_handle_status): Likewise.
+	(cbl_gpi_parent_status): Likewise.
+	(cbl_gpi_close_handle): Likewise.
+
+2026-09-21  Robert Dubner  <rdubner@symas.com>
+
+	* libgcobol.cc (int128_to_field): Remove rdigits formal parameter.
+	(__gg__int128_to_ascii_numeric_display): Likewise.
+	* valconv.cc (__gg__string_to_numeric_edited): Complete rewrite to
+	use parameters appended by expand_expanded().
+	* valconv.h: Remove rdigits format parameter from
+	__gg__int128_to_ascii_numeric_display.
+
+2026-09-18  Robert Dubner  <rdubner@symas.com>
+
+	* libgcobol.cc (do_the_dl_thing): New .so policy.
+	(find_in_dirs): Likewise.
+	(__gg__function_handle_from_cobpath): Likewise.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	PR cobol/126633
+	* Makefile.am: Replace udf with lib.
+	* Makefile.in: Likewise.
+	* compat/gnu/udf/cobrt-file-status.cbl: Move to...
+	* compat/gnu/lib/cobrt-file-status.cbl: ...here.
+	* compat/gnu/udf/stored-char-length.cbl: Move to...
+	* compat/gnu/lib/stored-char-length.cbl: ...here.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* Makefile.am: Add CBL_GET_PROGRAM_INFO.cbl and cbl_gpi.cc.
+	* Makefile.in: Likewise.
+	* compat/gnu/cpy/cblproto.cpy: Add CBL_GET_PROGRAM_INFO.
+	* compat/gnu/cpy/cbltypes.cpy: Add cblt-prog-info-params.
+	* compat/gnu/lib/CBL_GET_PROGRAM_INFO.cbl: New file.
+	* compat/gnu/lib/cbl_get_program_info.3: New file.
+	* compat/gnu/lib/cbl_gpi.cc: New file.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* libgcobol.cc (__gg__get_module_names): New function.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* Makefile.in: Update with autoreconf2.69.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/CBL_CHECK_FILE_EXIST.cbl: Use st_mtime.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/CBL_CHECK_FILE_EXIST.cbl: Add 1 to
+	cblte-fe-month.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/CBL_CREATE_FILE.cbl: Do not null-terminate
+	original string.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/cpy/cblproto.cpy: Use RETURN-CODE.
+	* compat/gnu/lib/CBL_CLOSE_FILE.cbl: Likewise.
+	* compat/gnu/lib/CBL_CREATE_FILE.cbl: Likewise.
+	* compat/gnu/lib/CBL_OPEN_FILE.cbl: Likewise.
+	* compat/gnu/lib/CBL_READ_FILE.cbl: Likewise.
+	* compat/gnu/lib/CBL_WRITE_FILE.cbl: Likewise.
+	* compat/gnu/lib/cbl_close_file.3: Document use of RETURN-CODE.
+	* compat/gnu/lib/cbl_create_file.3: Likewise.
+	* compat/gnu/lib/cbl_open_file.3: Likewise.
+	* compat/gnu/lib/cbl_read_file.3: Likewise.
+	* compat/gnu/lib/cbl_write_file.3: Likewise.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/CBL_OPEN_FILE.cbl: Revert.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* compat/gnu/lib/CBL_CREATE_FILE.cbl: Likewise.
+
+2026-09-18  Xavier Del Campo Romero  <xdelcampo@symas.com>
+
+	* Makefile.am: Add missing posix-close.cpy
+
+2026-09-17  Robert Dubner  <rdubner@symas.com>
+
+	* gmath.cc (__gg__int128_to_int128_rounded): Change error handling.
+	* libgcobol.cc (int128_to_field): Likewise.
+	(__gg__int128_to_ascii_numeric_display): New routine for increased
+	speed.
+	* valconv.cc (TOUPPER): Remove.
+	(expand_picture): Remove; it's being done in another routine.
+	(Lindex): Remove.
+	(Rindex): Remove.
+	(__gg__string_to_numeric_edited): Refactor for speed.
+	(__gg__string_to_alpha_edited): Eliminate call to expand_picture().
+	(__gg__currency_sign_init): Formatting.
+	* valconv.h: Change __gg__string_to_numeric_edited() return type.
+
+2026-09-10  Robert Dubner  <rdubner@symas.com>
+
+	* gmath.cc (__gg__conditional_stash_float): New routine supporting
+	faster GENERIC arithmetic.
+	(__gg__add_fixed_phase1): Remove obsolete function.
+	(__gg__addf1_fixed_phase2): Likewise.
+	(__gg__fixed_phase2_assign_to_c): Likewise.
+	(__gg__add_float_phase1): Likewise.
+	(__gg__addf1_float_phase2): Likewise.
+	(__gg__float_phase2_assign_to_c): Likewise.
+	(__gg__addf3): Likewise.
+	(__gg__subtractf1_fixed_phase2): Likewise.
+	(__gg__subtractf2_fixed_phase1): Likewise.
+	(__gg__subtractf1_float_phase2): Likewise.
+	(__gg__subtractf2_float_phase1): Likewise.
+	(__gg__subtractf3): Likewise.
+
 2026-09-09  Robert Dubner  <rdubner@symas.com>
 
 	* common-defs.h (enum cbl_round_t): Ensure storage is 'int'

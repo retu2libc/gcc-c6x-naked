@@ -1524,8 +1524,11 @@ dimensions( const cbl_field_t *f ) {
 
   if( f->type == FldIndex ) return 0;
 
-  while( (f = parent_of(f)) != NULL ) {
-    if( is_table(f) ) n++;
+  cbl_field_t *parent;
+  for( ; (parent = parent_of(f)) != nullptr; f = parent ) {
+    if( parent != symbol_redefines(f) ) {
+      if( is_table(parent) ) n++;
+    }
   }
 
   return n;
@@ -2027,8 +2030,10 @@ symbols_update( size_t first, bool parsed_ok ) {
           case FldNumericDisplay:
           case FldNumericEdited:
             if( ! (field->has_attr(register_e) || field->has_attr(hex_encoded_e)) ) {
-              error_msg(symbol_field_location(field_index(field)),
-                        "internal: %qs encoding not defined", field->name);
+              if( ! mode_syntax_only() ) {
+                error_msg(symbol_field_location(field_index(field)),
+                          "internal: %qs encoding not defined", field->name);
+              }
             }
             break;
           case FldClass:
@@ -3088,7 +3093,8 @@ symbol_file( size_t program, const char name[] ) {
       key.program = symbol_at(key.program)->program;
       p = symbols.files.find(key);
       if( p != symbols.files.end() ) {
-        const cbl_file_t *f = cbl_file_of(symbol_at(p->second));
+        // cppcheck-suppress constVariablePointer
+        auto f = cbl_file_of(symbol_at(p->second));
         if( f->attr & global_e ) break;
       }
     }
@@ -4788,88 +4794,346 @@ floating_char_in_string(const char *expanded_picture) {
 
 char *
 expand_picture(const char *picture)
+  {
+  // The caller should free() the return value.
+  assert(strlen(picture) < PICTURE_MAX); // guaranteed by picset() in scanner
+  size_t retval_length = PICTURE_MAX;
+
+  // In the expand_expanded routine, we are going to tack on some additional
+  // characters in order to speed up compile-time processin.
+  static const int PICTURE_EXTRA = 6;
+  retval_length += PICTURE_EXTRA;
+
+  char *retval = static_cast<char *>(xmalloc(retval_length));
+
+  int ch;
+  int prior_ch = NULLCH;
+  char *d = retval;
+  const char *p = picture;
+  long repeat;
+  int currency_symbol = NULLCH;
+
+  while( (ch = ((*p++) & 0xFF) ) )
     {
-    assert(strlen(picture) < PICTURE_MAX); // guaranteed by picset() in scanner
-    size_t retval_length = PICTURE_MAX;
-    char *retval = static_cast<char *>(xmalloc(retval_length));
-    size_t index = 0;
+    if( ch == ascii_oparen )
+      {
+      // Pick up the number after the left parenthesis
+      char *endchar;
+      repeat = strtol(p, &endchar, 10);
 
-    int ch;
-    int prior_ch = '\0';
-    const char *p = picture;
+      // We subtract one because we know that the character just before
+      // the parenthesis was already placed in retval
+      repeat -= 1;
 
-    long repeat;
-
-    int currency_symbol = currency_char_in_string(picture);
-
-    while( (ch = (*p++ & 0xFF) ) )
+      // Update p to the character after the right parenthesis
+      p = endchar + 1;
+      while(repeat--)
         {
-        if( ch == '(' )
-            {
-            // Pick up the number after the left parenthesis
-            char *endchar;
-            repeat = strtol(p, &endchar, 10);
-
-            // We subtract one because we know that the character just before
-            // the parenthesis was already placed in dest
-            repeat -= 1;
-
-            // Update p to the character after the right parenthesis
-            p = endchar + 1;
-
-            if( index + repeat >= retval_length )
-                {
-                retval_length <<= 1;
-                retval = static_cast<char *>(xrealloc(retval, retval_length));
-                }
-
-            while(repeat--)
-                {
-                retval[index++] = prior_ch;
-                }
-            }
-        else
-            {
-            if( index >= retval_length )
-                {
-                retval_length <<= 1;
-                retval = static_cast<char *>(xrealloc(retval, retval_length));
-                }
-            retval[index++] = ch;
-            }
-        prior_ch = ch;
+        *d++ = prior_ch;
         }
-    if( index >= retval_length )
-        {
-        retval_length <<= 1;
-        retval = static_cast<char *>(xrealloc(retval, retval_length));
-        }
-    retval[index++] = '\0';
+      }
+    else
+      {
+      prior_ch = ch;
+      *d++ = ch;
+      }
 
-    size_t dest_length = strlen(retval);
-
-    // We have to take into account the possibility that the currency symbol
-    // mapping might be to a string of more than one character:
-
-    if( currency_symbol )
-        {
-        size_t sign_length = strlen(symbol_currency(currency_symbol)) - 1;
-        if( sign_length )
-            {
-            char *pcurrency = strchr(retval, currency_symbol);
-            assert(pcurrency);
-            memmove(    pcurrency + sign_length,
-                        pcurrency,
-                        dest_length+1 - (pcurrency-retval));
-            for(size_t i=0; i<sign_length; i++)
-                {
-                pcurrency[i] = 'B';
-                }
-            }
-        }
-
-    return retval;
+    if( ! __gg__currency_signs[ch].empty() )
+      {
+      // We are going to be mapping ch to a string in the final result:
+      prior_ch = ch;
+      currency_symbol = ch;
+      }
     }
+
+  size_t dest_length = d-retval;
+
+  // We have to take into account the possibility that the currency symbol
+  // mapping might be to a string of more than one character:
+
+  if( currency_symbol )
+    {
+    size_t sign_length = __gg__currency_signs[currency_symbol].size();
+    assert(0 < sign_length);    
+    if( --sign_length )
+      {
+      char *pcurrency = strchr(retval, currency_symbol);
+      assert(pcurrency);
+      memmove(    pcurrency + sign_length,
+                  pcurrency,
+                  dest_length - (pcurrency-retval));
+      for(size_t i=0; i<sign_length; i++)
+        {
+        pcurrency[i] = ascii_B;
+        }
+      dest_length += sign_length;
+      }
+    }
+  retval[dest_length] = NULLCH;
+
+  // To ease the workload on interpreting the PICTURE string at run time, we
+  // are going to convert everything we can to upper case.  We also convert
+  // V to decimal point, for the same reason.  Characters that might be
+  // currency symbols have to be left in their uppercase or lowercase original
+  // state.
+  for(size_t i=0; i<dest_length; i++)
+    {
+    switch(retval[i])
+      {
+      case ascii_a:
+      case ascii_e:
+      case ascii_n:
+      case ascii_p:
+      case ascii_s:
+      case ascii_x:
+      case ascii_z:
+        retval[i] = TOUPPER(retval[i]);
+        break;
+      case ascii_V:
+      case ascii_v:
+        retval[i] = __gg__decimal_point;
+        break;
+
+      // We need special processing for DB.  When they appear as the final two
+      // characters, they are the accounting sign "DB" indicator and we have to
+      // leave the case as the programmer established it.  Otherwise we have to 
+      // make the 'B' uppercase.
+      
+      case ascii_B:
+      case ascii_b:
+        if( i < dest_length-1 )
+          {
+          retval[i] = ascii_B;
+          }
+        else
+          {
+          if( i>=1 && retval[i-1] != ascii_D && retval[i-1] != ascii_d )
+            {
+            retval[i] = ascii_B;
+            }
+          }
+        break;
+      }
+    }
+
+  // AD HOC FIX for an improper trailing space
+  char *pspace = strchr(retval, ascii_space);
+  if( pspace )
+    {
+    *pspace = NULLCH;
+    }
+
+  return retval;
+  }
+
+void
+expand_expanded(char *expanded)
+  {
+  if(strlen(expanded) == 0)
+    {
+    return;
+    }
+
+  unsigned char *dest = reinterpret_cast<unsigned char *>(expanded);
+
+  /* In order to make __gg__string_to_numeric_edited() run quickly, we are
+     going to process the expanded picture string especially for it.  What we
+     do here:
+     
+     Convert B to space, taking care not to touch a final 'DB'
+
+     Find the currency picture symbol
+     
+     Find the span of any '$$', '++', '--' 'Z', and '*' runs.
+
+     For any '$$', '++' and '--' runs, replace the first such char with a
+     space, and all the others with '9'
+     
+     For any 'Z' and '*' runs, replace all the characters with '9'.
+     
+     Figure out if any of the original picture characters are '9'.
+     
+     That information gets encoded into six characters that are appended to
+     the modified string.  
+     
+     Offset 0:   The currency character
+     Offset 1:   The floating character (space if empty)
+     Offset 2-3: The starting index of the float.
+     Offset 3-4: The one-past-the-end index of the float.
+
+     When there are '9' characters in the original, the 0x40 bit of offset 2
+     is turned on, turning '0'-'9' into 'q'-'y'
+     
+     Is everybody ready?  Then we'll begin.    */
+
+  int length_d = strlen(expanded);
+
+  unsigned char currency_char = ascii_space;
+  // Note that the currency_picture can be upper- or lower-case, and mean
+  // separate things in IBM.  In ISO COBOL, the comparison is case-insensitive.
+
+  unsigned floating_char = ascii_space;
+  int leftmost_float = -1;
+  int rightmost_float = -1;  // This is a one-past-the-end index
+
+  bool got_nines = false;
+
+  for(int i=0; i<length_d; i++)
+    {
+    int ch = (unsigned int)dest[i] & 0xFF;
+    if( !__gg__currency_signs[ch].empty() )
+      {
+      currency_char = ch;
+      break;
+      }
+    }
+
+  for(int i=0; i<length_d; i++)
+    {
+    if( dest[i] == ascii_9 )
+      {
+      got_nines = true;
+      break;
+      }
+    }
+
+  if( dest[0] == ascii_B )
+    {
+    dest[0] = ascii_space;
+    }
+  for(int i=1; i<length_d; i++)
+    {
+    if( dest[i] == ascii_B && dest[i-1] != ascii_D && dest[i-1] != ascii_d )
+      {
+      dest[i] = ascii_space;
+      }
+    }
+
+  if( currency_char != ascii_space )
+    {
+    leftmost_float =
+      static_cast<unsigned char *>(memchr(dest, currency_char, length_d)) - dest;
+    rightmost_float =
+      static_cast<unsigned char *>(memrchr(dest, currency_char, length_d)) - dest + 1;
+    if( rightmost_float > leftmost_float+1 )
+      {
+      floating_char = currency_char;
+      // Turn the first floating character into a space
+      dest[leftmost_float] = ascii_space;
+      for(int i=leftmost_float+1; i<rightmost_float; i++)
+        {
+        // Of the remainder, turn all floating characters into '9', so that
+        // they will be filled with numerical data from 'source'.
+        if( dest[i] == floating_char )
+          {
+          dest[i] = ascii_9;
+          }
+        }
+      }
+    else
+      {
+      leftmost_float = rightmost_float = -1;
+      }
+    }
+
+  if( memchr(dest, ascii_minus, length_d) )
+    {
+    int leftmost =
+      static_cast<unsigned char *>(memchr(dest, ascii_minus, length_d)) - dest;
+    int rightmost =
+      static_cast<unsigned char *>(memrchr(dest, ascii_minus, length_d)) - dest + 1;
+    if( rightmost > leftmost+1 )
+      {
+      floating_char = ascii_minus;
+      leftmost_float = leftmost;
+      rightmost_float = rightmost;
+      for(int i=leftmost_float+1; i<rightmost_float; i++)
+        {
+        // Of the remainder, turn all floating characters into '9', so that
+        // they will be filled with numerical data from 'source'.
+        if( dest[i] == floating_char )
+          {
+          dest[i] = ascii_9;
+          }
+        }
+      }
+    }
+
+  if( memchr(dest, ascii_plus, length_d) )
+    {
+    int leftmost =
+      static_cast<unsigned char *>(memchr(dest, ascii_plus, length_d)) - dest;
+    int rightmost =
+      static_cast<unsigned char *>(memrchr(dest, ascii_plus, length_d)) - dest + 1;
+    if( rightmost > leftmost+1 )
+      {
+      floating_char = ascii_plus;
+      leftmost_float = leftmost;
+      rightmost_float = rightmost;
+      for(int i=leftmost_float+1; i<rightmost_float; i++)
+        {
+        // Of the remainder, turn all floating characters into '9', so that
+        // they will be filled with numerical data from 'source'.
+        if( dest[i] == floating_char )
+          {
+          dest[i] = ascii_9;
+          }
+        }
+      }
+    }
+
+  if( memchr(dest, ascii_asterisk, length_d) )
+    {
+    floating_char = ascii_asterisk;
+    leftmost_float =
+      static_cast<unsigned char *>(memchr(dest, ascii_asterisk, length_d)) - dest;
+    rightmost_float =
+      static_cast<unsigned char *>(memrchr(dest, ascii_asterisk, length_d)) - dest + 1;
+    for(int i=leftmost_float; i<rightmost_float; i++)
+      {
+      // Turn all floating characters into '9', so that
+      // they will be filled with numerical data from 'source'.
+      if( dest[i] == floating_char )
+        {
+        dest[i] = ascii_9;
+        }
+      }
+    }
+
+  if( memchr(dest, ascii_Z, length_d) )
+    {
+    floating_char = ascii_Z;
+    leftmost_float =
+      static_cast<unsigned char *>(memchr(dest, ascii_Z, length_d)) - dest;
+    rightmost_float =
+      static_cast<unsigned char *>(memrchr(dest, ascii_Z, length_d)) - dest + 1;
+    for(int i=leftmost_float; i<rightmost_float; i++)
+      {
+      // Turn all floating characters into '9', so that
+      // they will be filled with numerical data from 'source'.
+      if( dest[i] == floating_char )
+        {
+        dest[i] = ascii_9;
+        }
+      }
+    }
+
+  char extra[7] = "      ";
+  extra[0] = currency_char;
+  if( floating_char != ascii_space )
+    {
+    extra[1] = floating_char;
+    extra[2] = leftmost_float  / 10 + ascii_0;
+    extra[3] = leftmost_float  % 10 + ascii_0;
+    extra[4] = rightmost_float / 10 + ascii_0;
+    extra[5] = rightmost_float % 10 + ascii_0;
+    if( got_nines )
+      {
+      extra[2] |= 0x40;
+      }
+    }
+  strcat(expanded, extra);
+  }
 
 int
 length_of_picture(const char *picture)
@@ -5129,15 +5393,27 @@ symbol_program_local( const char tgt_name[] ) {
  */
 std::map<char, const char *> currencies;
 
+static bool
+symbol_currency_symbol_ok( const char symbol ) {
+  static std::string never("ABCDEGNPRSUVXZ0-9abcdegnprsuvxz,.*/;()'\"=+-");
+  return std::string::npos == never.find(symbol);
+}
+
 // cppcheck-suppress-begin [nullPointerRedundantCheck]
 bool
 symbol_currency_add( const char symbol[], const char sign[] ) {
+  static const std::string never("ABCDEGNPRSUVXZ0-9abcdegnprsuvxz,.*/;()'\"=+-");
   // In service of CURRENCY sign PICTURE SYMBOL symbol
   // The single-character 'symbol' is replaced with multi-char 'sign'
   // by the NumericEdited processing.
   if( !symbol ) {
     symbol = xasprintf("%c", *sign);
+  } else {
+    if( ! symbol_currency_symbol_ok(symbol[0]) ) {
+      return false;
+    }
   }
+
   currencies[*symbol] = sign;
   return true;
 }

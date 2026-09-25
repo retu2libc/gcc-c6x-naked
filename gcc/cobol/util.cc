@@ -235,33 +235,33 @@ cdf_dictionary() {
 // elements permitted in a program or function prototype
 static const std::set<dspc_t> prototype_elements {
   dspc_identification_div_e,
-  dspc_options_para_e, 
+  dspc_options_para_e,
   ////_arithmetic_clause_e, disallowed
-  dspc_default_rounded_clause_e, 
-  dspc_entry_convention_clause_e, 
-  dspc_float_binary_clause_e, 
-  dspc_float_decimal_clause_e, 
-  dspc_initialize_clause_e, 
-  dspc_intermediate_rounding_clause_e, 
+  dspc_default_rounded_clause_e,
+  dspc_entry_convention_clause_e,
+  dspc_float_binary_clause_e,
+  dspc_float_decimal_clause_e,
+  dspc_initialize_clause_e,
+  dspc_intermediate_rounding_clause_e,
 
   dspc_environment_div_e,
-  dspc_configuration_section_e, 
-  dspc_source_computer_paragraph_e, 
+  dspc_configuration_section_e,
+  dspc_source_computer_paragraph_e,
   ////_object_computer_paragraph_e, disallowed
-  
+
   // permitted special names clauses
-  dspc_special_names_paragraph_e, 
-  dspc_alphabet_name_clause_e, 
-  dspc_currency_sign_clause_e, 
-  dspc_decimal_point_is_comma_clause_e, 
-  dspc_locale_clause_e, 
-  dspc_symbolic_characters_clause_e, 
+  dspc_special_names_paragraph_e,
+  dspc_alphabet_name_clause_e,
+  dspc_currency_sign_clause_e,
+  dspc_decimal_point_is_comma_clause_e,
+  dspc_locale_clause_e,
+  dspc_symbolic_characters_clause_e,
 
   // no i-o section, and we assume no repository paragraph
 
   dspc_data_div_e,
   dspc_linkage_section_e,
-  
+
   dspc_procedure_div_e, // only header is allowed
   dspc_procedure_header_e,
 };
@@ -270,7 +270,7 @@ bool
 cbl_prototype_ok( const cbl_loc_t& loc, size_t iprog, dspc_t clause ) {
   bool prototyping = cbl_label_of(symbol_at(iprog))->prototype;
   if( prototyping && 0 == prototype_elements.count(clause) ) {
-    error_msg( loc, "syntax not allowed for PROTOTYPE" ); 
+    error_msg( loc, "syntax not allowed for PROTOTYPE" );
     return false;
   }
   return true;
@@ -333,7 +333,7 @@ cdf_file( size_t program, const cbl_name_t name ) {
     return cbl_file_of(e);
   }
   return nullptr;
-} 
+}
 
 size_t
 cdf_file_index( const cbl_file_t *file ) {
@@ -545,7 +545,7 @@ static char regexmsg[80];
 static int
 named_constant( const cbl_name_t name ) {
   int output = -1;
-  
+
   auto e = symbol_field( current_program_index(), 0, name );
   if( e && e->type == SymField ) {
     auto f = cbl_field_of(e);
@@ -583,7 +583,7 @@ repeat_count(const char picture[])
       if( (count = named_constant(name)) < 0 ) {
         error_msg(yylloc, "not a positive integer constant: %qs: %d", name, count);
       }
-    } 
+    }
   }
 
   if( n == 2 && 0 <= count ) {
@@ -1620,7 +1620,7 @@ cbl_field_t::encode_numeric( const char input[], cbl_loc_t loc ) {
                 // The final value will have data.digits + l_rdigits decimal
                 // places.  Let's scale rvalue to that range, taking into
                 // account that we already have l_rdigits of those places.
-                tester *= 
+                tester *=
                      get_power_of_ten(data.digits + data.rdigits - l_rdigits);
 
                 // In the case of PPP9999, tester needs to be between 1 and
@@ -1925,14 +1925,26 @@ cbl_field_t::encode_numeric( const char input[], cbl_loc_t loc ) {
             }
           else
             {
-            digits_from_int128(ach, this, char_capacity(), value, l_rdigits);
+            digits_from_int128(ach,
+                               this,
+                               data.digits,
+                               value,
+                               l_rdigits);
 
             // __gg__string_to_numeric_edited operates in ASCII space:
+            char *expanded = expand_picture(data.picture);
+            // By the time you read this, this next statement ought to be
+            // obsolete.  See RT issue 3682.
+            expanded[char_capacity()] = '\0';
+            if( type == FldNumericEdited )
+              {
+              expand_expanded(expanded);
+              }
             __gg__string_to_numeric_edited( reinterpret_cast<char *>(retval),
                                             ach,
-                                            data.rdigits,
                                             negative,
-                                            data.picture);
+                                            expanded);
+            free(expanded);
             // So now we convert it to the target encoding:
             size_t nbytes;
             const char *converted = __gg__iconverter(DEFAULT_SOURCE_ENCODING,
@@ -2099,17 +2111,17 @@ cbl_field_t::report_invalid_initial_value(const cbl_loc_t& loc) const {
     /*
      * This is overspecific: It catches numeric literal VALUE for all_alpha_e\
      *  only.
-     * The general error is: 
+     * The general error is:
      * - alphanumeric type
      * - data.initial is all spaces (based on PICTURE)
      * - data.original() is numeric or data.etc_type == value_e
      * - quoted_e clear, of course
-     * 
+     *
      * This happens because VALUE was captured as a cce and stored in
      * data.original for encode_numeric.  But encode_numeric was never called
      * because it's not a numeric field.
      *
-     * It is also insufficient.  It does not deal with VALUE LENGTH OF.  
+     * It is also insufficient.  It does not deal with VALUE LENGTH OF.
      */
     if( is_alpha_only ) {
       charmap_t *charmap = __gg__get_charmap(codeset.encoding);
@@ -2124,13 +2136,13 @@ cbl_field_t::report_invalid_initial_value(const cbl_loc_t& loc) const {
         }
       }
     }
-    
+
     if( ! is_alpha_only ) {
       error_msg(loc, "alpha-only %s VALUE '%s' contains non-alphabetic data",
                name, fig == zero_value_e? cbl_figconst_str(fig) : orig);
-      
+
       auto pend = orig + strlen(orig);
-      auto p = std::find_if( orig, pend, 
+      auto p = std::find_if( orig, pend,
                              []( char ch ) { return ! ISALPHA(ch); } );
       dbgmsg("%zu nonalpha '%.*s'", pend - p, int(pend - p), p);
     }
@@ -2146,32 +2158,37 @@ const cbl_field_t *
 literal_subscript_oob( const cbl_refer_t& r, size_t& isub /* output */)  {
   // Verify literal subscripts if dimensions are correct.
   size_t ndim(dimensions(r.field));
-  if( ndim == 0 || ndim != r.nsubscript() ) return NULL;
-  std::vector<cbl_field_t *> dims( ndim, NULL );
-  auto pdim = dims.end();
+  if( ndim == 0 || ndim != r.nsubscript() ) return nullptr;
+  std::deque<cbl_field_t *> dims(1, r.field);
+  if( ! is_table(dims[0]) ) dims.clear();
 
-  for( auto f = r.field; f; f = parent_of(f) ) {
-    if( f->occurs.ntimes() ) {
-      --pdim;
-      *pdim = f;
+  // dims is a vector of fields representing the dimensions, starting topmost.
+  cbl_field_t *parent;
+  for( auto f = r.field; (parent = parent_of(f)) != nullptr; f = parent ) {
+    if( parent != symbol_redefines(f) ) {
+      if( is_table(parent) ) {
+        dims.push_front(parent);
+      }
     }
   }
-  assert(dims[0] != NULL);
-  assert(pdim == dims.begin());
+
+  assert(dims.size() == ndim);
 
   /*
    * For each subscript, if it is a literal, verify it is in bounds
    * for the corresponding dimension.  Return the first subscript not
    * meeting those criteria, if any.
    */
-  auto psub = std::find_if( r.subscripts.begin(), r.subscripts.end(),
-                         [pdim]( const cbl_refer_t& r ) mutable {
-                           const auto& occurs((*pdim)->occurs);
-                           pdim++;
-                           return ! occurs.subscript_ok(r.field);
-                         } );
-  isub = psub - r.subscripts.begin();
-  return psub == r.subscripts.end()? NULL : dims[isub];
+  for( isub=0; isub < ndim; isub++ ) {
+    const auto& subscript = r.subscripts[isub];
+    const auto& occurs = dims[isub]->occurs;
+    
+    if( ! occurs.subscript_ok(subscript.field) ) {
+      break; // found one
+    }
+  }
+
+  return isub == ndim? nullptr : dims[isub];
 }
 
 size_t
@@ -2324,10 +2341,10 @@ valid_move( const cbl_refer_t& tgt_ref, const cbl_refer_t& src_ref )
 
   /*
    * 8.4.3.3.3 Syntax rules
-   * A refmod may apply to: 
+   * A refmod may apply to:
    * "a numeric data item of usage display or national that is not subordinate
    * to a strongly-typed group item,"
-   * 
+   *
    * 8.4.3.3.4 General rules
    *
    * "If the data item referenced by identifier-1 is explicitly or implicitly
@@ -2525,6 +2542,18 @@ hex_decode( const char input[] ) {
   return output;
 }
 
+// input: H'[[:xdigit:]]+', for GnuCOBOL
+char *
+hex2numstr( const char input[] ) {
+  char q;
+  long unsigned int value;
+
+  int n = sscanf(++input, "%c%" GCC_PRISZ "x%c", &q, &value, &q);
+  assert(n == 3 && (q == '\'' || q == '"'));
+         
+  return xasprintf("%lu", value);
+}
+
 /*
  * Verify unique procedure reference.
  *
@@ -2645,12 +2674,12 @@ namespace match_proc {
     };
     void error(const cbl_loc_t& loc,
                const tgt_t&tgt,
-               const found_t& found) const 
+               const found_t& found) const
     {
       const char *clause = tgt == tgts.first? "" : "THRU ";
       assert( 1 != found.n );
       const char *status = found.n == 0? "procedure not found" : "ambiguous reference";
-          
+
       error_msg(loc, "%s: PERFORM %s%s", status, clause, tgt.name.c_str());
     }
   };
@@ -2801,7 +2830,7 @@ namespace match_proc {
         if( yydebug && 1 < n ) {
           for( const auto& para : matched ) {
             fprintf(stderr, "procedures_t::find:%d: ambig: %s of #%lu, %s\n", __LINE__,
-                    para.name.c_str(), (unsigned long)para.parent, 
+                    para.name.c_str(), (unsigned long)para.parent,
                     para.parent_name().c_str());
           }
         }
@@ -2819,7 +2848,7 @@ namespace match_proc {
     static bool match_any_paragraph( const para_t& para,
                                      const stmt_t::tgt_t& tgt )
     {
-      assert( tgt.qual.empty() ); 
+      assert( tgt.qual.empty() );
       return para.name == tgt.name;
     }
     static bool match( const para_t& para,
@@ -2828,7 +2857,7 @@ namespace match_proc {
       if( tgt.qual.empty() ) {
         return para.parent_name() == tgt.name
           ||   para.name == tgt.name;
-      } 
+      }
       return para.name == tgt.name
         &&   para.parent_name() == tgt.qual;
     }
@@ -2903,7 +2932,7 @@ namespace match_proc {
     }
     return nerr == 0;
   }
-  
+
   void statement_add() {
     stmts.push_back(prototype);
     prototype = stmt_t();
@@ -3439,7 +3468,7 @@ bool cobol_filename( const char *name, ino_t inode ) {
       assert(inode != 0);
     }
   }
-  
+
   linemap_add(line_table, LC_ENTER, sysp, name, 1);
   input_filename_vestige = name;
   bool pushed = input_filenames.push( input_file_t(name, inode, 1) );
@@ -3542,7 +3571,7 @@ gcc_location_set( const cbl_loc_t& loc ) {
     finish_line  = linemap_line_start( line_table, loc.last_line, 80 ),
     token_finish = linemap_position_for_column( line_table, loc.last_column);
   token_location = make_location (token_start, token_start, token_finish);
-  
+
   if( loc.first_line > first_line_minus_1 ) {
     // In order for GDB-COBOL to be able to step through COBOL code properly,
     // it is sometimes necessary for the code at the beginning of a COBOL
@@ -3555,7 +3584,7 @@ gcc_location_set( const cbl_loc_t& loc ) {
     token_location_minus_1 = loc_m_1;
     loc_m_1 = token_location;
   }
-  
+
   location_dump(__func__, __LINE__, "parser", loc);
 }
 
@@ -3846,7 +3875,7 @@ parse_file( const char filename[] )
 #endif
 
   parser_leave_file();
-  
+
   fclose (yyin);
 
   if( erc ) {

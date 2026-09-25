@@ -1254,7 +1254,7 @@
 
 (define_expand "vec_cmpv2sfv2si"
   [(set (match_operand:V2SI 0 "register_operand")
-	(match_operator:V2SI 1 ""
+	(match_operator:V2SI 1 "ix86_fp_vec_cmp_operator"
 	  [(match_operand:V2SF 2 "nonimmediate_operand")
 	   (match_operand:V2SF 3 "nonimmediate_operand")]))]
   "TARGET_MMX_WITH_SSE && ix86_partial_vec_fp_math"
@@ -3190,7 +3190,7 @@
    (set (attr "enabled")
 	(cond [(and (eq_attr "alternative" "0")
 		    (and (match_test "TARGET_PARTIAL_REG_STALL")
-			 (not (match_test "optimize_function_for_size_p (cfun)"))))
+			 (not (match_test "optimize_size"))))
 		(symbol_ref "false")
 	      ]
 	      (const_string "*")))])
@@ -3297,7 +3297,7 @@
    (set (attr "enabled")
 	(cond [(and (eq_attr "alternative" "0")
 		    (and (match_test "TARGET_PARTIAL_REG_STALL")
-			 (not (match_test "optimize_function_for_size_p (cfun)"))))
+			 (not (match_test "optimize_size"))))
 		(symbol_ref "false")
 	      ]
 	      (const_string "*")))])

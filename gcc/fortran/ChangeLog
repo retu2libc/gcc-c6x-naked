@@ -1,3 +1,201 @@
+2026-09-22  Chung-Lin Tang  <cltang@baylibre.com>
+
+	* openmp.cc (gfc_match_omp_declare_target): Adjust error handling
+	to handle local clause.
+	* trans-common.cc (build_common_decl): Adjust handling of device_type
+	clause, remove sorry and FIXME of LOCAL clause, handle local clause.
+	* trans-decl.cc (add_attributes_to_decl): Adjust handling of device_type
+	clause, remove sorry of LOCAL clause, adjust creating of
+	"omp declare target [link]" attribute between OpenACC/OpenMP.
+
+2026-09-21  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/127448
+	* trans-array.cc (is_pointer_array): Remove redundant condition.
+	(is_span_addressed_array): For polymorphic arrays, return false if
+	the array is known to be contiguous.
+	* trans-types.cc (gfc_get_derived_type): Also set the
+	GFC_DECL_PTR_ARRAY_P flag for _data fields of class containers
+	corresponding to polymorphic array pointers.
+
+2026-09-21  Mikael Morin  <mikael@gcc.gnu.org>
+
+	* trans-array.cc (gfc_get_dataptr_offset): Move guess of decl
+	for span from function argument...
+	(build_array_ref): ... to function body.  Only set the decl if it
+	was empty on input and wasn't set by a previous guess.
+
+2026-09-21  Mikael Morin  <mikael@gcc.gnu.org>
+
+	* trans-array.cc (span_addressed_array): Change return type to bool
+	and rename to ...
+	(is_span_addressed_array): ... this.
+	(gfc_get_dataptr_offset): Separate the predicate from the choice
+	between NULL_TREE and the input array.
+	(gfc_get_array_span, gfc_conv_scalarized_array_ref,
+	gfc_conv_array_ref): Update callers.
+
+2026-09-21  Mikael Morin  <mikael@gcc.gnu.org>
+
+	* trans.cc (gfc_build_spanned_array_ref): Remove condition guarding
+	pointer dereference generation.
+	* trans-array.cc (gfc_get_dataptr_offset): Remove now redundant
+	pointer dereference generation.
+
+2026-09-21  Tobias Burnus  <tburnus@baylibre.com>
+
+	* openmp.cc (gfc_match_omp_clauses): Rename argument 'first'
+	to first_no_comma for clarity.
+	(match_omp, gfc_match_omp_allocate, gfc_match_omp_assume,
+	gfc_match_omp_assumes, gfc_match_omp_critical,
+	gfc_match_omp_depobj, gfc_match_omp_flush,
+	gfc_match_omp_declare_simd, gfc_match_omp_declare_mapper,
+	gfc_match_omp_declare_reduction, gfc_match_omp_declare_target,
+	gfc_match_omp_thread_group_private, gfc_match_omp_requires,
+	gfc_match_omp_scan, gfc_match_omp_atomic,
+	gfc_match_omp_cancel_kind, gfc_match_omp_end_nowait,
+	gfc_match_omp_end_single): Permit comma between directive name
+	and clause name.
+
+2026-09-18  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/127146
+	* primary.cc (gfc_match_rvalue): At two points: if the entry in
+	the parameter list has a name, use that in preference to the
+	component name.
+
+2026-09-17  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/125690
+	* decl.cc (gfc_get_pdt_instance): PDT strings with explicit
+	array specifications are also PDT arrays. If the component is
+	allocatable, the typespec must be marked deferred.
+	* resolve.cc (resolve_structure_cons): Skip the string length
+	check for PDT types.
+	(resolve_allocate_expr): Initialize cmp to 0. Do not emit error
+	if cmp = -3 since different variable could have the same value.
+	* trans-array.cc (gfc_conv_scalarized_array_ref): Force pointer
+	arithmetic by setting 'decl' for PDT strings.
+	(gfc_conv_array_ref): Likewise.
+	(structure_alloc_comps ): Move the declaraion of 'strlen' up.
+	Evaluate the bounds and offset for pdt_strings as well as pdt
+	arrays. If non-null, use strlen to obtain the size for malloc.
+	Set the span to strlen.
+	If the component type is a descriptor, rather than just a PDT
+	array, use its data forboth the non-null condition and setting
+	to null.
+	* trans-io.cc (gfc_trans_transfer): PDT string arrays must be
+	scalarized.
+
+2026-09-17  Paul Thomas  <pault@gcc.gnu.org>
+
+	PR fortran/104776
+	* decl.cc (gfc_get_pdt_instance): Simplify the initializers of
+	KIND components in PDT templates since they must be integer
+	constants. Catch any remaining component initializers for
+	parameter substitution, if necessary, and simplification.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-expr.cc (gfc_conv_scalar_to_descriptor): Move scalar
+	descriptor initialization code ...
+	* trans-descriptor.cc (gfc_set_descriptor_from_scalar): ... here as
+	a new function.
+	* trans-descriptor.h (gfc_set_descriptor_from_scalar): New
+	declaration.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-expr.cc (gfc_conv_derived_to_class): Move scalar descriptor
+	initialization code ...
+	* trans-descriptor.cc (gfc_set_descriptor_from_scalar): ... here as
+	a new function.
+	* trans-descriptor.h (gfc_set_descriptor_from_scalar): New
+	declaration.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-descriptor.h (gfc_copy_coarray_desc_part): New declaration.
+	* trans-descriptor.cc (gfc_copy_coarray_desc_part): New function,
+	moved from...
+	* trans-expr.cc (copy_coarray_desc_part): ... here.
+	(gfc_class_array_data_assign, gfc_conv_derived_to_class): Update
+	function name in callers.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-expr.cc (gfc_conv_class_to_class): Move descriptor
+	initialization...
+	* trans-descriptor.cc (gfc_set_descriptor_from_scalar_class):
+	... here as a new function.
+	* trans-descriptor.h (gfc_set_descriptor_from_scalar_class): New
+	declaration.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-types.h (gfc_get_scalar_to_descriptor_type): New
+	declaration.
+	* trans-types.cc (gfc_get_scalar_to_descriptor_type): New
+	function, moved from ...
+	* trans-expr.cc (get_scalar_to_descriptor_type): ... here.
+	(gfc_conv_scalar_to_descriptor, gfc_conv_derived_to_class,
+	gfc_conv_class_to_class): Update function name in callers.
+
+2026-09-15  Mikael Morin  <mikael@gcc.gnu.org>
+
+	PR fortran/122521
+	* trans-expr.cc (get_scalar_to_descriptor_type): Remove argument
+	`scalar'; add argument `scalar_type'.  Replace `TREE_TYPE (scalar)'
+	with `scalar_type'.
+	(gfc_conv_scalar_to_descriptor, gfc_conv_derived_to_class,
+	gfc_conv_class_to_class): Only pass the type as argument in callers.
+
+2026-09-13  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR fortran/103474
+	* simplify.cc (simplify_cobound): Take the array spec from the
+	base symbol, using its class data for a CLASS coarray, so that a
+	subobject of a coarray finds the codimensions.  Return NULL for a
+	symbol already flagged as erroneous and in place of the two
+	gcc_unreachable calls reached on invalid code.
+	* resolve.cc (gfc_expression_rank): Track the reference carrying
+	the codimensions and take the corank from it rather than from the
+	last array reference.  Clear it at an allocatable or pointer
+	component selector, which ends the coarray.
+	* trans-intrinsic.cc (strip_subobject_of_coarray): New function.
+	Return a copy of the expression cut back to the reference carrying
+	the codimensions.
+	(conv_intrinsic_cobound, trans_this_image, trans_image_index): Use
+	it, so that the descriptor queried for the cobounds is that of the
+	coarray and not that of a component of it.
+
+2026-09-13  Jerry DeLisle  <jvdelisle@gcc.gnu.org>
+
+	PR fortran/126781
+	* check.cc (check_team_or_team_number): New function.
+	(gfc_check_image_index, gfc_check_num_images): Take the actual
+	argument list and use it.
+	* intrinsic.cc (add_sym_2red, add_sym_4red): New functions.
+	(add_functions): Give NUM_IMAGES and IMAGE_INDEX separate TEAM
+	and TEAM_NUMBER arguments.
+	(check_specific): Pass the actual argument list to
+	gfc_check_num_images and gfc_check_image_index.
+	* intrinsic.h (gfc_check_num_images, gfc_check_image_index,
+	gfc_simplify_image_index, gfc_simplify_num_images,
+	gfc_resolve_image_index): Update prototypes.
+	* intrinsic.texi (IMAGE_INDEX, NUM_IMAGES): Document TEAM and
+	TEAM_NUMBER as separate arguments.  Fix the NUM_IMAGES example.
+	* iresolve.cc (gfc_resolve_image_index): Add TEAM_NUMBER argument.
+	* simplify.cc (gfc_simplify_num_images, gfc_simplify_image_index):
+	Likewise.
+	* trans-intrinsic.cc (trans_image_index, trans_num_images): Take
+	the team number from the TEAM_NUMBER argument.
+
 2026-09-08  Kael Andrew Alonzo Franco  <kaelfandrew@gmail.com>
 
 	PR middle-end/126622

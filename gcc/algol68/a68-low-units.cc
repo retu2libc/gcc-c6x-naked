@@ -301,8 +301,7 @@ a68_lower_denotation (NODE_T *p, LOW_CTX_T ctx)
 #else
       uint64_t val = strtoull (end, &end, radix);
 #endif
-      gcc_assert (errno == 0 && end[0] == '\0');
-
+      gcc_assert (end[0] == '\0');
       uint64_t max_positive = uint64_t (wi::max_value (type).to_uhwi ());
       if (errno == ERANGE || val > max_positive)
 	{
@@ -325,11 +324,11 @@ a68_lower_denotation (NODE_T *p, LOW_CTX_T ctx)
 	s = SUB (p);
 
       if (moid == M_REAL)
-	type = float_type_node;
+	type = a68_real_type;
       else if (moid == M_LONG_REAL)
-	type = double_type_node;
+	type = a68_long_real_type;
       else if (moid == M_LONG_LONG_REAL)
-	type = long_double_type_node;
+	type = a68_long_long_real_type;
       else
 	gcc_unreachable ();
 
@@ -413,7 +412,7 @@ a68_lower_identity_relation (NODE_T *p, LOW_CTX_T ctx)
     gcc_unreachable ();
 
   return fold_build2_loc (a68_get_node_location (p),
-			  code, boolean_type_node, op1, op2);
+			  code, a68_bool_type, op1, op2);
 }
 
 /* Lower AND_FUNCTION and OR_FUNCTION.
@@ -446,7 +445,7 @@ a68_lower_logic_function (NODE_T *p, LOW_CTX_T ctx)
     gcc_unreachable ();
 
   return fold_build2_loc (a68_get_node_location (p),
-			  code, boolean_type_node, op1, op2);
+			  code, a68_bool_type, op1, op2);
 }
 
 /* Lower a primary.

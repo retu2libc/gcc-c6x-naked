@@ -2907,7 +2907,17 @@ default_conversion (tree exp)
     return convert (promoted_type, exp);
 
   if (INTEGRAL_TYPE_P (type))
-    return perform_integral_promotions (exp);
+    {
+      /* Avoid performing integral promotion of bit-precise integer
+	 type bit-field to its corresponding bit-precise integer if
+	 orig_exp is a cast to it to its underlying type.  */
+      if (orig_exp != exp
+	  && TREE_CODE (exp) == COMPONENT_REF
+	  && DECL_C_BIT_FIELD (TREE_OPERAND (exp, 1))
+	  && BITINT_TYPE_P (DECL_BIT_FIELD_TYPE (TREE_OPERAND (exp, 1))))
+	return perform_integral_promotions (orig_exp);
+      return perform_integral_promotions (exp);
+    }
 
   return exp;
 }
@@ -7673,7 +7683,12 @@ build_c_cast (location_t loc, tree type, tree expr)
     }
 
   /* Don't let a cast be an lvalue.  */
-  if (lvalue_p (value))
+  if (lvalue_p (value)
+      /* Also, don't let a cast be a bit-field of a bit-precise integer type,
+	 otherwise it could be incorrectly subject of integer promotions.  */
+      || (TREE_CODE (value) == COMPONENT_REF
+	  && DECL_C_BIT_FIELD (TREE_OPERAND (value, 1))
+	  && BITINT_TYPE_P (DECL_BIT_FIELD_TYPE (TREE_OPERAND (value, 1)))))
     value = non_lvalue_loc (loc, value);
 
   /* Don't allow the results of casting to floating-point or complex
@@ -17792,6 +17807,22 @@ c_finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
 		remove = true;
 		break;
 	      }
+
+	    tree attr;
+	    if (DECL_P (t)
+		&& OMP_CLAUSE_CODE (c) == OMP_CLAUSE_MAP
+		&& (attr = lookup_attribute ("omp declare target",
+					     DECL_ATTRIBUTES (t)))
+		&& value_member (get_identifier ("local"),
+				 TREE_VALUE (attr)))
+	      {
+		error_at (OMP_CLAUSE_LOCATION (c),
+			  "device-local variable %qD cannot appear "
+			  "in map clause", t);
+		remove = true;
+		break;
+	      }
+
 	    /* OpenACC attach / detach clauses must be pointers.  */
 	    if (c_oacc_check_attachments (c))
 	      {
@@ -17986,6 +18017,7 @@ c_finish_omp_clauses (tree clauses, enum c_omp_region_type ort)
 
 	case OMP_CLAUSE_ENTER:
 	case OMP_CLAUSE_LINK:
+	case OMP_CLAUSE_LOCAL:
 	  t = OMP_CLAUSE_DECL (c);
 	  const char *cname;
 	  cname = omp_clause_code_name[OMP_CLAUSE_CODE (c)];
