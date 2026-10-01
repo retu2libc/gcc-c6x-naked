@@ -32,6 +32,10 @@
 
 #include "coretypes.h"
 #include "tree.h"
+#include "stor-layout.h"
+#include "ggc.h"
+#include "gtype-desc.h"
+#include "../../libgcobol/literal-call-descriptor.h"
 #include "tree-iterator.h"
 #include "stringpool.h"
 #include "diagnostic-core.h"
@@ -155,7 +159,7 @@ static bool next_program_is_main = false;   // transient switch for the module
 static char *main_entry_point = NULL;
 
 static bool static_call = true;
-bool use_static_call( bool yn ) { return static_call = yn; }
+bool set_use_static_call( bool yn ) { return static_call = yn; }
 static bool use_static_call() { return static_call; }
 
 // This global variable can be set upstream, like from a compiler
@@ -6319,60 +6323,134 @@ parser_arith_error_end(cbl_label_t *arithmetic_label)
   gg_append_statement( arithmetic_label->structs.arith_error->over.label );
   }
 
+// Preserve the existing traversal, including repeated entries from REDEFINES.
 static void
-propogate_linkage_offsets(cbl_field_t *field, tree base)
+collect_linkage_offsets(cbl_field_t *field,
+                        tree base,
+                        std::vector<cbl_field_t *> &fields)
   {
   if( field->level == LEVEL01 || field->level == LEVEL77 )
     {
     field->data_decl_node = base;
-    symbol_elem_t *e = symbol_at(field_index(field));
-    // We already updated the data pointer of the first element:
-    e += 1;
+    symbol_elem_t *e = symbol_at(field_index(field)) + 1;
     while( e < symbols_end() )
       {
-      symbol_elem_t& element = *e++;
+      symbol_elem_t &element = *e++;
       if( element.type == SymField )
         {
         cbl_field_t *this_one = cbl_field_of(&element);
         if( this_one->level == LEVEL01 || this_one->level == LEVEL77 )
           {
-          // We have encountered another level 01/77.  If this LEVEL 01 had a
-          // parent, then we have to assume that this is a redefines of another
-          // level 01/77.
           if( this_one->parent )
             {
-            // And, gloriously and frighteningly, it can be handled by
-            // recursion:
-            propogate_linkage_offsets(this_one, base);
+            collect_linkage_offsets(this_one, base, fields);
             }
           else
             {
-            // Having encountered the next 01 or 77, we are done
             break;
             }
           }
         if( this_one->level == 00 )
           {
-          // Ignore LEVEL00 "INDEXED BY" variables
           continue;
           }
-        tree offset = gg_define_variable(SIZE_T);
-        IF( base, eq_op, gg_cast(UCHAR_P, null_pointer_node) )
-          {
-          gg_assign(offset, size_t_zero_node);
-          }
-        ELSE
-          {
-          gg_assign(offset, member(this_one, "offset"));
-          }
-        ENDIF
         this_one->data_decl_node = base;
-        member( this_one,
-                "data",
-                gg_add(base, offset));
+        fields.push_back(this_one);
         }
       }
     }
+  }
+
+static void
+propagate_linkage_offsets(cbl_field_t *field, tree base)
+  {
+  std::vector<cbl_field_t *> fields;
+  collect_linkage_offsets(field, base, fields);
+  if( fields.empty() )
+    {
+    return;
+    }
+
+  // Both current callers supply an addressable pointer: a local variable
+  // for USING, or a descriptor's data member for SET ADDRESS OF.
+  // Retain the old emission for other expressions or nonstatic descriptors.
+  bool batchable = TREE_TYPE(base) == UCHAR_P
+                   && !TREE_THIS_VOLATILE(base)
+                   && (TREE_CODE(base) == VAR_DECL
+                       || TREE_CODE(base) == PARM_DECL
+                       || TREE_CODE(base) == COMPONENT_REF);
+  for( size_t i = 0; i < fields.size(); ++i )
+    {
+    tree decl = fields[i]->var_decl_node;
+    if( !decl
+        || TREE_CODE(decl) != VAR_DECL
+        || !TREE_STATIC(decl)
+        || DECL_EXTERNAL(decl)
+        || DECL_WEAK(decl)
+        || DECL_THREAD_LOCAL_P(decl)
+        || DECL_HAS_VALUE_EXPR_P(decl)
+        || TREE_THIS_VOLATILE(decl) )
+      {
+      batchable = false;
+      break;
+      }
+    }
+
+  if( !batchable )
+    {
+    for( size_t i = 0; i < fields.size(); ++i )
+      {
+      cbl_field_t *this_one = fields[i];
+      tree offset = gg_define_variable(SIZE_T);
+      IF( base, eq_op, gg_cast(UCHAR_P, null_pointer_node) )
+        {
+        gg_assign(offset, size_t_zero_node);
+        }
+      ELSE
+        {
+        gg_assign(offset, member(this_one, "offset"));
+        }
+      ENDIF
+      member(this_one, "data", gg_add(base, offset));
+      }
+    return;
+    }
+
+  static size_t table_number = 0;
+  char name[96];
+  snprintf(name, sizeof(name),
+           "..linkage_offsets_" HOST_SIZE_T_PRINT_DEC,
+           (fmt_size_t)table_number++);
+
+  tree array_type = build_array_type_nelts(VOID_P, fields.size());
+  vec<constructor_elt, va_gc> *elts = NULL;
+  for( size_t i = 0; i < fields.size(); ++i )
+    {
+    CONSTRUCTOR_APPEND_ELT(
+      elts,
+      build_int_cst_type(SIZE_T, i),
+      gg_cast(VOID_P, gg_get_address_of(fields[i]->var_decl_node)));
+    }
+  tree initializer = build_constructor(array_type, elts);
+  gcc_assert(TREE_CONSTANT(initializer));
+  TREE_STATIC(initializer) = 1;
+
+  tree table = gg_declare_variable(array_type, name, NULL_TREE,
+                                  vs_file_static);
+  DECL_INITIAL(table) = initializer;
+  TREE_READONLY(table) = 1;
+  DECL_ARTIFICIAL(table) = 1;
+  DECL_IGNORED_P(table) = 1;
+  gg_define_from_declaration(table);
+
+  // Pass the location of the base, not a snapshot of its value.  This
+  // preserves repeated reads if a preceding descriptor store changes it.
+  gg_call(VOID,
+          "__gg__propagate_linkage_offsets",
+          gg_pointer_to_array(table),
+          gg_get_address_of(base),
+          build_int_cst_type(SIZE_T, fields.size()),
+          NULL_TREE);
   }
 
 static bool initialized_data = false;
@@ -6659,7 +6737,7 @@ establish_using(size_t nusing,
 
         // We need to apply reference + offset to the LINKAGE variable
         // and all of its children
-        propogate_linkage_offsets( args[i].field(), reference );
+        propagate_linkage_offsets( args[i].field(), reference );
         }
 
       if( crv == by_value_e )
@@ -7569,7 +7647,7 @@ parser_label_goto(struct cbl_label_t *label)
 
 void
 parser_setop( struct cbl_field_t *tgt,
-              struct cbl_field_t *candidate,
+              struct cbl_refer_t &candidate,
               enum setop_t op,
               struct cbl_field_t *domain)
   {
@@ -7578,7 +7656,7 @@ parser_setop( struct cbl_field_t *tgt,
     {
     SHOW_PARSE_HEADER
     SHOW_PARSE_FIELD(" ", tgt)
-    SHOW_PARSE_FIELD(" = ", candidate)
+    SHOW_PARSE_FIELD(" = ", candidate.field)
     if( op == is_op )
       {
       SHOW_PARSE_TEXT(" is_op ")
@@ -7588,13 +7666,13 @@ parser_setop( struct cbl_field_t *tgt,
     }
 
   CHECK_FIELD(tgt);
-  CHECK_FIELD(candidate);
+  CHECK_FIELD(candidate.field);
   CHECK_FIELD(domain);
 
   TRACE1
     {
     TRACE1_HEADER
-    TRACE1_FIELD("parser_setop: ", candidate, "")
+    TRACE1_REFER("parser_setop: ", candidate, "")
     TRACE1_TEXT(" ")
     TRACE1_TEXT(setop_str(op))
     TRACE1_FIELD(" ", domain, "")
@@ -7606,25 +7684,28 @@ parser_setop( struct cbl_field_t *tgt,
   switch(op)
     {
     case is_op:
-      switch(candidate->type)
+      switch(candidate.field->type)
         {
         case FldGroup:
         case FldAlphanumeric:
-          gg_assign(tgt->var_decl_node, gg_build_relational_expression(
-                      gg_call_expr(INT,
-                                   "__gg__setop_compare",
-                                   gg_get_address_of(candidate->var_decl_node),
-                                   member(domain, "initial"),
-                                   NULL_TREE),
-                      ne_op,
-                      integer_zero_node));
+          gg_assign(tgt->var_decl_node,
+                    gg_build_relational_expression(gg_call_expr(
+                             INT,
+                             "__gg__setop_compare",
+                             gg_get_address_of(candidate.field->var_decl_node),
+                             refer_offset(candidate),
+                             refer_size_source(candidate),
+                             member(domain, "initial"),
+                             NULL_TREE),
+                                                    ne_op,
+                                                    integer_zero_node));
           break;
         default:
           dbgmsg("%10s in %s:%d", __func__, __FILE__, __LINE__ );
           cbl_internal_error("candidate %s has unimplemented %<CVT_type%> %d(%s)",
-                             candidate->name,
-                             candidate->type,
-                             cbl_field_type_str(candidate->type));
+                             candidate.field->name,
+                             candidate.field->type,
+                             cbl_field_type_str(candidate.field->type));
           gcc_unreachable();
           break;
         }
@@ -13034,8 +13115,9 @@ create_and_call(size_t narg,
 
     // Actually call the function, assigning the returned value to that
     // variable:
+    returned_value = gg_define_variable(interfunction_type);
     push_program_state();
-    returned_value = call_expr;
+    gg_assign(returned_value, call_expr);
     pop_program_state();
 
     // Now we decided what to do with the returned value, based on its type.
@@ -13145,6 +13227,133 @@ create_and_call(size_t narg,
     }
   }
 
+/* Cache one target-layout type and keep it reachable across GCC collections.
+   Dynamic root registration avoids requiring a new gengtype input file. */
+static tree literal_call_descriptor_type_node;
+
+static const struct ggc_root_tab literal_call_descriptor_roots[] =
+  {
+    { &literal_call_descriptor_type_node, 1, sizeof(tree),
+      &gt_ggc_mx_tree_node, &gt_pch_nx_tree_node },
+    LAST_GGC_ROOT_TAB
+  };
+
+static tree
+literal_call_descriptor_type()
+  {
+  if( literal_call_descriptor_type_node != NULL_TREE )
+    {
+    return literal_call_descriptor_type_node;
+    }
+
+  ggc_register_root_tab(literal_call_descriptor_roots);
+  tree record = make_node(RECORD_TYPE);
+  literal_call_descriptor_type_node = record;
+  TYPE_NAME(record) = get_identifier("cblc_literal_call_descriptor");
+
+  tree const_char_pointer
+    = build_pointer_type(build_qualified_type(char_type_node, TYPE_QUAL_CONST));
+  tree const_void_pointer
+    = build_pointer_type(build_qualified_type(void_type_node, TYPE_QUAL_CONST));
+
+#define GCOBOL_CALL_FIELD_NAME(name, c_type, tree_type) #name,
+  const char *names[] =
+    {
+    GCOBOL_LITERAL_CALL_DESCRIPTOR_FIELDS(GCOBOL_CALL_FIELD_NAME)
+    };
+#undef GCOBOL_CALL_FIELD_NAME
+#define GCOBOL_CALL_FIELD_TYPE(name, c_type, tree_type) tree_type,
+  tree types[] =
+    {
+    GCOBOL_LITERAL_CALL_DESCRIPTOR_FIELDS(GCOBOL_CALL_FIELD_TYPE)
+    };
+#undef GCOBOL_CALL_FIELD_TYPE
+
+  tree *next = &TYPE_FIELDS(record);
+  for( size_t i = 0; i < sizeof(types) / sizeof(types[0]); i++ )
+    {
+    tree member_decl = build_decl(UNKNOWN_LOCATION,
+                                  FIELD_DECL,
+                                  get_identifier(names[i]),
+                                  types[i]);
+    DECL_FIELD_CONTEXT(member_decl) = record;
+    *next = member_decl;
+    next = &DECL_CHAIN(member_decl);
+    }
+  *next = NULL_TREE;
+  layout_type(record);
+  return record;
+  }
+
+/* Emit a static initializer, not executable per-call assignments. */
+static tree
+literal_call_descriptor(const cbl_refer_t &name, bool issue_warning)
+  {
+  tree record = literal_call_descriptor_type();
+  tree literal = gg_string_literal(name.field->data.original());
+  tree field = gg_get_address_of(name.field->var_decl_node);
+  tree warning_filename = null_pointer_node;
+  tree program_id
+    = build_int_cst(INT, current_function->our_symbol_table_index);
+  tree call_convention = build_int_cst_type(INT, current_call_convention());
+  tree warning_line = integer_zero_node;
+
+  if( issue_warning )
+    {
+    warning_filename = gg_string_literal(current_filename.back().c_str());
+    warning_line = build_int_cst_type(INT, CURRENT_LINE_NUMBER);
+    }
+
+#define GCOBOL_CALL_FIELD_VALUE(name, c_type, tree_type) name,
+  tree values[] =
+    {
+    GCOBOL_LITERAL_CALL_DESCRIPTOR_FIELDS(GCOBOL_CALL_FIELD_VALUE)
+    };
+#undef GCOBOL_CALL_FIELD_VALUE
+
+  vec<constructor_elt, va_gc> *elts = NULL;
+  tree member_decl = TYPE_FIELDS(record);
+  for( size_t i = 0; i < sizeof(values) / sizeof(values[0]); i++ )
+    {
+    tree value = gg_cast(TREE_TYPE(member_decl), values[i]);
+    CONSTRUCTOR_APPEND_ELT(elts, member_decl, value);
+    member_decl = DECL_CHAIN(member_decl);
+    }
+  gcc_assert(member_decl == NULL_TREE);
+
+  tree initializer = build_constructor(record, elts);
+  gcc_assert(TREE_CONSTANT(initializer));
+  TREE_STATIC(initializer) = 1;
+
+  // vs_static supplies a unique name and roots the declaration in its function.
+  tree descriptor = gg_define_variable(record, vs_static);
+  TREE_READONLY(descriptor) = 1;
+  DECL_ARTIFICIAL(descriptor) = 1;
+  DECL_IGNORED_P(descriptor) = 1;
+  DECL_INITIAL(descriptor) = initializer;
+  return gg_get_address_of(descriptor);
+  }
+
+static tree
+function_pointer_for_literal_call(const cbl_refer_t &name,
+                                  tree function_return_type,
+                                  bool issue_warning)
+  {
+  tree function_type = build_varargs_function_type_array(
+                         function_return_type,
+                         0,
+                         NULL);
+  tree function_pointer_type = build_pointer_type(function_type);
+  tree descriptor = literal_call_descriptor(name, issue_warning);
+
+  return gg_cast(
+           function_pointer_type,
+           gg_call_expr(VOID_P,
+                        "__gg__resolve_literal_call_descriptor",
+                        descriptor,
+                        NULL_TREE));
+  }
+
 void
 parser_call(   cbl_refer_t name,
                cbl_refer_t returned,  // This is set by RETURNING clause
@@ -13154,9 +13363,6 @@ parser_call(   cbl_refer_t name,
                cbl_label_t *not_except,
                bool /*is_function*/)
   {
-  // A note on the processing of function return types:
-
-
   Analyze();
   SHOW_PARSE
     {
@@ -13266,9 +13472,23 @@ parser_call(   cbl_refer_t name,
     }
   else
     {
-    tree function_pointer = function_pointer_from_name( name,
-                                                      interfunction_type);
-    // We might not have a good handle, so we have to check:
+    const bool literal_call = name.field->type == FldLiteralA;
+    const bool issue_warning
+      = !except && !cdf_enabled_exceptions().match(ec_program_not_found_e);
+
+    tree function_pointer;
+    if( literal_call )
+      {
+      function_pointer = function_pointer_for_literal_call(name,
+                                                           interfunction_type,
+                                                           issue_warning);
+      }
+    else
+      {
+      function_pointer = function_pointer_from_name(name, interfunction_type);
+      }
+    function_pointer = save_expr(function_pointer);
+
     IF( function_pointer,
         ne_op,
         gg_cast(TREE_TYPE(function_pointer), null_pointer_node) )
@@ -13283,47 +13503,35 @@ parser_call(   cbl_refer_t name,
       }
     ELSE
       {
-      // We have a bad function pointer, which is the exception condition:
-      // Set the exception message to "name"
-      gg_call(VOID,
-              "__gg__set_exception_call",
-              gg_get_address_of(name.field->var_decl_node),
-              refer_offset(name),
-              NULL_TREE);
-      parser_exception_raise(ec_program_not_found_e);
+      /* The literal resolver has already recorded lookup failure.
+         Variable-name calls retain their existing bookkeeping. */
+      if( !literal_call )
+        {
+        gg_call(VOID,
+                "__gg__set_exception_call",
+                gg_get_address_of(name.field->var_decl_node),
+                refer_offset(name),
+                NULL_TREE);
+        parser_exception_raise(ec_program_not_found_e);
+        }
+
       if( except )
         {
-        // We have an ON EXCEPT clause:
-        gg_append_statement( except->structs.call_exception->into.go_to );
-        // Because there is an ON EXCEPTION clause, suppress DECLARATIVE
-        // processing
+        // Set the exception data, but clear the code, because
+        // ON EXCEPTION prevents exception process.
         gg_assign(var_decl_exception_code, integer_zero_node);
+        gg_append_statement(except->structs.call_exception->into.go_to);
         }
-      else
+      else if( !literal_call && issue_warning )
         {
-        // When EC-PROGRAM-NOT-FOUND is not enabled, we issue a warning.
-        const cbl_enabled_exceptions_t&
-                                enabled_exceptions( cdf_enabled_exceptions() );
-        if( !enabled_exceptions.match(ec_program_not_found_e) )
-          {
-          tree mangled_name = gg_define_variable(CHAR_P);
-
-          gg_call(VOID,
-                  "__gg__just_mangle_name",
-                  (name.field->var_decl_node
-                                  ? gg_get_address_of(name.field->var_decl_node)
-                                  : null_pointer_node),
-                  gg_get_address_of(  mangled_name),
-                  NULL_TREE);
-
-          gg_printf("WARNING: %s:%d \"CALL %s\" not found"
-                    " with no \"CALL ON EXCEPTION\" phrase.\n"
-                    "(You might need -rdynamic or --export-dynamic for symbols in the executable.)\n",
-                    gg_string_literal(current_filename.back().c_str()),
-                    build_int_cst_type(INT, CURRENT_LINE_NUMBER),
-                    mangled_name,
-                    NULL_TREE);
-          }
+        gg_call(VOID,
+                "__gg__call_warning_message",
+                (name.field->var_decl_node
+                  ? gg_get_address_of(name.field->var_decl_node)
+                  : null_pointer_node),
+                gg_string_literal(current_filename.back().c_str()),
+                build_int_cst_type(INT, CURRENT_LINE_NUMBER),
+                NULL_TREE);
         }
       }
     ENDIF
@@ -13656,7 +13864,7 @@ parser_set_pointers( size_t ntgt, cbl_refer_t *tgts, cbl_refer_t source )
         // When SET ADDRESS OF TARGET TO ..., the library call sets
         // tgts[i].field->data.  We need to propagate the data+offset
         // through the level01 variable's children:
-        propogate_linkage_offsets(tgts[i].field,
+        propagate_linkage_offsets(tgts[i].field,
                                   member(tgts[i].field->var_decl_node, "data"));
         }
       }

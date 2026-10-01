@@ -3077,6 +3077,14 @@ cxx_eval_builtin_function_call (const constexpr_ctx *ctx, tree t, tree fun,
 	    arg = oarg;
 	}
 
+      /* If the argument STRRET refers to didn't end up as the address of a
+	 STRING_CST, the folded result is already relative to it and must not
+	 be re-based on the original argument below.  */
+      if (i == strret - 1
+	  && (TREE_CODE (arg) != ADDR_EXPR
+	      || TREE_CODE (TREE_OPERAND (arg, 0)) != STRING_CST))
+	strret = 0;
+
       args[i] = arg;
     }
   if (bos)
@@ -8649,7 +8657,7 @@ cxx_eval_store_expression (const constexpr_ctx *ctx, tree t,
   bool empty_base = false;
   while (!refs->is_empty ())
     {
-      if (*valp == NULL_TREE)
+      if (*valp == NULL_TREE || *valp == void_node)
 	{
 	  *valp = build_constructor (type, NULL);
 	  CONSTRUCTOR_NO_CLEARING (*valp) = no_zero_init;
@@ -8998,7 +9006,7 @@ cxx_eval_store_expression (const constexpr_ctx *ctx, tree t,
     }
   else if (TREE_CLOBBER_P (init))
     {
-      if (AGGREGATE_TYPE_P (type))
+      if (AGGREGATE_TYPE_P (type) && CLOBBER_KIND (init) < CLOBBER_OBJECT_END)
 	{
 	  if (*valp && TREE_CODE (*valp) == CONSTRUCTOR)
 	    CONSTRUCTOR_ELTS (*valp) = nullptr;

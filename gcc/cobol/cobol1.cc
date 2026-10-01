@@ -344,7 +344,7 @@ cobol_option_lang_mask (void) {
   return CL_Cobol;
 }
 
-bool use_static_call( bool yn );
+bool set_use_static_call( bool yn );
 void add_cobol_exception( ec_type_t type, bool );
 
 bool include_file_add(const char input[]);
@@ -441,7 +441,7 @@ void cobol_warning_suppress( cbl_dialect_t dialect );
 /*
  * If an unrecognized/unimplmemented EC is specified, emit a warning.  If the
  * warning is turned off, keep quiet.
- * 
+ *
  * Tue Aug 25 09:41:37 2026: For reasons unclear gcobol duplicates some
  * command-line options to cobol1.  In any case if the user specifies the ssme
  * EC twice, or uses it more than once in the body of the code, he doesn't
@@ -517,7 +517,7 @@ cobol_langhook_handle_option (size_t scode,
             return true;
 
         case OPT_fstatic_call:
-            use_static_call( arg? true : false );
+            set_use_static_call( value != 0 );
             return true;
 
         case OPT_fdefaultbyte:
@@ -560,7 +560,7 @@ cobol_langhook_handle_option (size_t scode,
 
         case OPT_dialect:
             // gcc disallows 0 as an enumerated value, so we used 0x10 for iso.
-            if( cobol_dialect == 0x100 ) cobol_dialect = 0; 
+            if( cobol_dialect == 0x100 ) cobol_dialect = 0;
             cobol_dialect_set(cbl_dialect_t(cobol_dialect));
             cobol_warning_suppress(cbl_dialect_t(cobol_dialect));
             return true;
@@ -642,6 +642,10 @@ cobol_langhook_handle_option (size_t scode,
 
         case OPT_Whex_numeric:
           cobol_warning(MfHexNumeric, hex_numeric, warning_as_error);
+          return true;
+
+        case OPT_Wvalue_clause:
+          cobol_warning(MfValueClause, value_clause, warning_as_error);
           return true;
 
         case OPT_Winspect_trailing:
@@ -726,6 +730,10 @@ cobol_langhook_handle_option (size_t scode,
 
         case OPT_Wentry_convention:
           cobol_warning(ParInfoI, entry_convention, warning_as_error);
+          return true;
+
+        case OPT_Werrno:
+          cobol_warning(ParNumstrW, cobol_errno, warning_as_error);
           return true;
 
         case OPT_Wiconv_error:
